@@ -11,9 +11,11 @@ import {
 import { Studio, Admin } from "./studio";
 import { SecurityPage, RecoveryPage } from "./security";
 import { ChapterEdit, ConfigPage } from "./management";
+import { ProfilePage } from "./profile";
 import { Empty } from "./shell";
 export function RoutePage({ path }: { path: string[] }) {
   const first = path[0];
+  if (first === "tai-khoan") return <ProfilePage />;
   if (first === "bao-mat") return <SecurityPage />;
   if (["xac-minh", "quen-mat-khau", "dat-lai-mat-khau"].includes(first))
     return (

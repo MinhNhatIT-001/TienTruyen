@@ -87,11 +87,11 @@ export function Header() {
         Mỗi câu chuyện, một thế giới chờ bạn khám phá <span>✦</span>
       </div>
       <header className="header">
-        <div className="header-inner">
+        <div className={`header-inner ${user ? "has-user" : ""}`}>
           <Link href="/" className="brand">
             <span className="seal">仙</span>
             <span>
-              tiên<span className="brand-light">truyện</span>
+              Tiên <span className="brand-light">Truyện</span>
               <small>CHẠM VÀO MỘT THẾ GIỚI KHÁC</small>
             </span>
           </Link>
@@ -127,22 +127,42 @@ export function Header() {
                 </Link>
                 <div className="user-wrap">
                   <button
-                    className="avatar"
+                    className="account-trigger"
                     aria-label="Mở menu tài khoản"
                     aria-expanded={menu}
                     onClick={() => setMenu(!menu)}
                   >
-                    {user.name.charAt(0)}
+                    <span className="avatar" aria-hidden="true">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt="" width={34} height={34} />
+                      ) : (
+                        user.name.charAt(0)
+                      )}
+                    </span>
+                    <span className="account-name" title={user.name}>
+                      {Array.from(user.name.normalize("NFC"))
+                        .slice(0, 15)
+                        .join("")}
+                      {Array.from(user.name.normalize("NFC")).length > 15
+                        ? "…"
+                        : ""}
+                    </span>
+                    <ChevronDown size={12} aria-hidden="true" />
                   </button>
                   {menu && (
                     <div className="user-menu">
                       <strong>{user.name}</strong>
                       <small>{user.email}</small>
+                      <Link href="/tai-khoan">Hồ sơ tài khoản</Link>
                       <Link href="/cap-bac">Cảnh giới của tôi</Link>
                       <Link href="/lich-su-giao-dich">Lịch sử giao dịch</Link>
                       <Link href="/cai-dat">Cài đặt đọc</Link>
                       <Link href="/bao-mat">Bảo mật tài khoản</Link>
-                      <Link href="/tac-gia">Góc tác giả</Link>
+                      {user.roles.includes("AUTHOR") ? (
+                        <Link href="/tac-gia">Góc tác giả</Link>
+                      ) : (
+                        <Link href="/tro-thanh-tac-gia">Trở thành tác giả</Link>
+                      )}
                       {user.roles.includes("ADMIN") && (
                         <Link href="/admin">Quản trị</Link>
                       )}
@@ -181,7 +201,6 @@ export function Header() {
             <Link href="/the-loai/tat-ca">Thể loại</Link>
             <Link href="/bang-xep-hang">Xếp hạng</Link>
             <Link href="/tu-truyen">Tủ truyện</Link>
-            <Link href="/tro-thanh-tac-gia">Góc tác giả</Link>
           </nav>
         )}
       </header>
@@ -195,13 +214,12 @@ export function Footer() {
         <Link className="brand" href="/">
           <span className="seal">仙</span>
           <span>
-            tiên<span className="brand-light">truyện</span>
+            Tiên <span className="brand-light">Truyện</span>
           </span>
         </Link>
         <p>Một trang sách, vạn dặm nhân gian.</p>
-        <Link href="/tro-thanh-tac-gia">
-          <Feather size={16} /> Viết câu chuyện của bạn{" "}
-          <ArrowUpRight size={16} />
+        <Link href="/tim-kiem">
+          Khám phá thư viện <ArrowUpRight size={16} />
         </Link>
       </div>
       <div className="footer-bottom">

@@ -38,6 +38,7 @@ services:
       MEILI_NO_ANALYTICS: "true"
     volumes: ["search-data:/meili_data"]
   api:
+    volumes: ["avatar-uploads:/app/uploads"]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -65,5 +66,6 @@ services:
     ports: ["127.0.0.1:3000:3000"]
     depends_on: [api]
 volumes:
+  avatar-uploads:
   postgres-data:
   search-data:

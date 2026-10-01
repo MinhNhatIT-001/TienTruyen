@@ -12,6 +12,8 @@ RUN pnpm --filter @tientruyen/api db:generate && pnpm --filter @tientruyen/api b
 FROM base AS runtime
 WORKDIR /app
 COPY --from=build --chown=node:node /app /app
+RUN mkdir -p /app/uploads/avatars && chown -R node:node /app/uploads
+ENV AVATAR_UPLOAD_DIR=/app/uploads/avatars
 USER node
 WORKDIR /app/apps/api
 EXPOSE 4000

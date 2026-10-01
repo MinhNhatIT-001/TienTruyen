@@ -23,6 +23,7 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
   api:
+    volumes: ["avatar-uploads:/app/uploads"]
     build: { context: ., dockerfile: apps/api/Dockerfile }
     environment:
       NODE_ENV: production
@@ -78,6 +79,7 @@ services:
     mem_limit: 512m
     cpus: 0.5
 volumes:
+  avatar-uploads:
   postgres-data:
   search-data:
   caddy-data:

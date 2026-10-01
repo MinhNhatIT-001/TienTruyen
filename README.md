@@ -80,3 +80,21 @@ Hoàn tiền lượt mua là bút toán mới; bản local giữ quyền đọc 
 Đặt `SMTP_URL` và `MAIL_FROM` để gửi email thật. Link xác minh và reset dùng token một lần có hạn. Khi không cấu hình SMTP, chỉ local trả token dùng thử. Không commit `.env` hoặc bí mật.
 
 Không dùng Compose development trên máy công khai. `docker-compose.prod.yml` là cấu hình khởi đầu, cần secrets ngẫu nhiên, domain HTTPS, cấu hình email, cổng thanh toán, backup và các hạng mục trong READINESS trước khi nhận tiền thật.
+
+### Tài khoản thử local
+
+Đã tạo admin `admin@tientruyen.local`, tác giả `author@tientruyen.local` (mỗi tài khoản 2.000 HN), cùng `reader1@tientruyen.local` đến `reader5@tientruyen.local` (mỗi tài khoản 5.000 HN).
+
+Mật khẩu riêng và khóa 2FA được lưu trong `docs/local-accounts.md` trên máy chủ project, quyền đọc chỉ chủ file và đã loại khỏi Git. Thêm khóa của admin/tác giả vào ứng dụng Authenticator để lấy mã đăng nhập. Đây là HN thử, không phải giao dịch tiền thật. Tác giả thử quản lý các truyện mẫu ban đầu.
+
+Trang hồ sơ `/tai-khoan` có ví, bảo mật và mục Trở thành tác giả; vào hồ sơ từ menu avatar. Trang chủ, footer và menu điều hướng chính không quảng bá đăng ký tác giả.
+
+Script `apps/api/src/seed-local-accounts.ts` chỉ chạy khi bật `LOCAL_ACCOUNT_SEED=true` ngoài production và chỉ định `LOCAL_ACCOUNT_OUTPUT`; từ chối ghi đè file mật khẩu hoặc tài khoản hiện có.
+
+### Avatar tài khoản
+
+Bộ 11 avatar trong `apps/web/public/avatars` được nhập từ thư mục ảnh do chủ máy cung cấp, chuẩn hóa 256×256 WebP. Đăng ký mới chọn ngẫu nhiên; migration gán avatar cho các tài khoản hiện có.
+
+Vào **Hồ sơ tài khoản → Đổi avatar** để chọn ảnh có sẵn hoặc tải ảnh JPG/PNG/WebP tối đa 2 MB. Server kiểm tra chữ ký file, giới hạn kích thước ảnh, loại metadata và chuyển sang WebP. Ảnh tải lên được lưu trong volume `avatar-uploads`, nên được giữ qua rebuild/recreate container. Cần backup volume này cùng database.
+
+Tên đăng ký mới giới hạn 8–15 ký tự; tên trên header co theo nội dung, giữ mũi tên gần tên. Khung tìm kiếm cùng chiều rộng cột truyện hoàn thành ở desktop.

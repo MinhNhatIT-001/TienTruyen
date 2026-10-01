@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID, createHmac } from "node:crypto";
@@ -40,8 +42,28 @@ test(
     }
     const email = `integration-${randomUUID()}@example.invalid`,
       password = `Test-${randomUUID()}`;
+    const tooLong = await call("/auth/register", "POST", {
+      name: "IntegrationTests",
+      email: `name-limit-${randomUUID()}@example.invalid`,
+      password,
+    });
+    assert.equal(
+      tooLong.status,
+      400,
+      "registration rejects more than 15 characters",
+    );
+    const tooShort = await call("/auth/register", "POST", {
+      name: "Test123",
+      email: `short-name-${randomUUID()}@example.invalid`,
+      password,
+    });
+    assert.equal(
+      tooShort.status,
+      400,
+      "registration rejects fewer than 8 characters",
+    );
     let r = await call("/auth/register", "POST", {
-      name: "Integration test",
+      name: "IntegrationTest",
       email,
       password,
     });
@@ -52,6 +74,38 @@ test(
     assert.equal(r.status, 201);
     assert(cookies.get("tt_access"));
     assert(cookies.get("tt_refresh"));
+    const gallery = await call("/avatars");
+    assert.equal(gallery.data.length, 11);
+    r = await call("/auth/me");
+    assert(
+      gallery.data.includes(r.data.avatar),
+      "new accounts receive a gallery avatar",
+    );
+    r = await call("/users/avatar", "PUT", {
+      avatar: "https://example.invalid/image.svg",
+    });
+    assert.equal(r.status, 400, "arbitrary avatar URLs are rejected");
+    r = await call("/users/avatar", "PUT", { avatar: gallery.data[1] });
+    assert.equal(r.status, 200);
+    assert.equal((await call("/auth/me")).data.avatar, gallery.data[1]);
+    r = await call("/users/avatar/upload", "POST", {
+      image: Buffer.from("<svg>bad</svg>").toString("base64"),
+    });
+    assert.equal(r.status, 400, "SVG masquerading as an avatar is rejected");
+    const avatarBytes = await readFile(
+      resolve(__dirname, "../../web/public/avatars/avatar-01.webp"),
+    );
+    r = await call("/users/avatar/upload", "POST", {
+      image: avatarBytes.toString("base64"),
+    });
+    assert.equal(r.status, 201);
+    const avatarImage = await fetch(
+      base!.replace(/\/api$/, "") + r.data.avatar,
+    );
+    assert.equal(avatarImage.status, 200);
+    assert.equal(avatarImage.headers.get("content-type"), "image/webp");
+    assert.equal((await call("/auth/me")).data.avatar, r.data.avatar);
+
     r = await call("/admin/users");
     assert.equal(r.status, 403, "reader cannot access admin");
     r = await call("/stories/van-dao-truong-sinh/chapters/6");
@@ -201,7 +255,7 @@ test(
       password = `Test-${randomUUID()}`;
     try {
       let r = await call("/auth/register", "POST", {
-        name: "Integration author",
+        name: "Test author",
         email,
         password,
       });
@@ -291,7 +345,7 @@ test(
         where: {
           user: {
             email: { startsWith: "integration-" },
-            name: "Integration test",
+            name: "IntegrationTest",
           },
         },
         orderBy: { createdAt: "desc" },

@@ -20,7 +20,7 @@
 - Chọn và tích hợp adapter cổng thanh toán sandbox/production cụ thể (hiện chỉ có webhook chung và nạp local); thử đối soát nhà cung cấp, hoàn tiền nạp và rút tiền thực tế.
 - Cấu hình SMTP/domain thật, thử deliverability; tích hợp Turnstile, kiểm tra danh sách mật khẩu bị lộ đầy đủ và khóa tăng dần theo số lần thất bại. Hiện rate limit theo nhóm endpoint/IP và 10 lần đăng nhập/email trong 15 phút; danh sách mật khẩu phổ biến còn ngắn.
 - Meilisearch mới được provision; tìm kiếm hiện lọc thư viện từ API (tối đa 100 truyện). Cần index metadata, đồng bộ khi duyệt/gỡ và phân trang server cho thư viện lớn.
-- Bìa hiện là minh họa CSS có sẵn. Chưa nhận upload file; cần pipeline kiểm tra magic bytes, sharp, bucket riêng trước khi bật upload.
+- Bìa truyện hiện là minh họa CSS có sẵn. Chưa nhận upload bìa; cần pipeline kiểm tra magic bytes, sharp, bucket riêng trước khi bật upload.
 - Chống trùng hiện hash sau normalize, chưa so độ tương đồng; bổ sung điều chỉnh/khóa cấp thủ công và nhận diện spam nâng cao.
 - Đã bổ sung Lexend; bìa/huy hiệu hiện là CSS, chưa đủ đặc quyền khung avatar/màu tên theo mọi cảnh giới.
 - Đã bổ sung metadata từng truyện/chương, canonical, Open Graph, robots và sitemap (hiện theo 100 truyện API). Chi tiết truyện và chương miễn phí đã render từ server, không chuyển cookie sang API nên nội dung khóa không lộ qua SSR. Cần sitemap phân trang và kiểm thử tránh nháy theme.
@@ -46,3 +46,20 @@
 - Đối soát ví: không có chênh lệch ledger.
 - Giới hạn email: 10 lần thử trả 401 với tài khoản giả; lần 11 trả 429 cùng Retry-After 900.
 - Người dùng chọn giữ nạp thử local; chưa bật thanh toán thật.
+
+## Cập nhật trang chủ và tài khoản thử
+
+- Thiết kế lại trang chủ theo bố cục thư viện: truyện nổi bật, tìm kiếm hoạt động, truyện hoàn thành, kệ theo thể loại, cập nhật và xếp hạng theo điểm.
+- Tên thương hiệu header/footer là “Tiên Truyện”.
+- Đưa đăng ký tác giả vào hồ sơ và menu tài khoản; bỏ lời mời ở trang chủ/footer/menu điều hướng.
+- Trang hồ sơ hiển thị vai trò, ví và các lối vào quản lý tài khoản.
+- Tạo 1 admin, 1 tác giả và 5 độc giả thử, có ledger HN và mật khẩu ngẫu nhiên riêng; 2FA bật cho admin/tác giả. File mật khẩu riêng tư, không đưa vào Git.
+- Đã kiểm tra đăng nhập, quyền và số dư của cả 7 tài khoản qua API; kiểm tra UI đăng nhập độc giả, hồ sơ, tìm kiếm và mobile 390px.
+- Kiểm tra TypeScript, build Docker, 9 kiểm thử và đối soát ví đạt.
+
+## Avatar
+
+- Bộ 11 ảnh có sẵn, avatar ngẫu nhiên khi đăng ký và migration tự gán cho tài khoản cũ.
+- Chọn avatar hoặc tải ảnh từ hồ sơ; header cập nhật ngay sau khi lưu.
+- Upload nhận JPG/PNG/WebP ≤2 MB, kiểm tra magic bytes, ảnh tĩnh, tối đa 20 triệu pixel, reencode 256×256 và bỏ metadata. Không nhận URL ảnh tùy ý hoặc SVG.
+- Giới hạn 5 lần tải/account/giờ; ảnh lưu volume riêng, cần đưa vào quy trình backup.

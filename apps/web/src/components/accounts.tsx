@@ -98,9 +98,9 @@ export function AuthPage({ register = false }: { register?: boolean }) {
                 name="name"
                 autoComplete="name"
                 required
-                minLength={2}
-                maxLength={60}
-                placeholder="Bạn muốn được gọi là gì?"
+                minLength={8}
+                maxLength={15}
+                placeholder="Tên của bạn · 8–15 ký tự"
               />
             </label>
           )}

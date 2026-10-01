@@ -7,3 +7,8 @@ dist/
 *.tsbuildinfo
 coverage/
 .DS_Store
+
+# Local generated credentials
+docs/local-accounts.md
+
+uploads/

@@ -14,6 +14,7 @@ export type Story = {
 export type User = {
   id: string;
   name: string;
+  avatar?: string;
   email: string;
   roles: string[];
   balance: number;

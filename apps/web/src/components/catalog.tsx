@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   ChevronRight,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import sample from "../lib/catalog.json";
 import { type Story, genres, format } from "../lib/types";
@@ -87,188 +88,211 @@ export function Home() {
     sample[0];
   const shown = stories
     .filter((s) => genre === "Tất cả" || s.genre === genre)
-    .slice(0, 4);
+    .slice(0, 6);
+  const ranked = [...stories].sort((a, b) => b.rating - a.rating).slice(0, 5);
+  const completed = stories
+    .filter((s) => s.progress === "Hoàn thành")
+    .slice(0, 3);
   return (
-    <main className="home container">
+    <main className="home library-home container">
       {demo && (
         <div className="demo-note">
           Đang xem thư viện mẫu · Kết nối API để sử dụng tài khoản và giao dịch.
         </div>
       )}
-      <section className="hero">
-        <div className="hero-copy">
-          <div className="kicker">
-            <span /> CHO NHỮNG TÂM HỒN THÍCH PHIÊU DU
-          </div>
-          <h1>
-            Một trang sách,
-            <br />
-            <em>vạn dặm nhân gian.</em>
-          </h1>
-          <p>
-            Gác lại bộn bề, bước vào những thế giới mới.
-            <br />
-            Câu chuyện tiếp theo của bạn đang chờ ở đây.
-          </p>
-          <div className="hero-buttons">
-            <Link className="btn primary" href="/the-loai/tat-ca">
-              Tìm truyện để đọc <ArrowRight size={17} />
-            </Link>
-            <Link className="btn text" href="/tro-thanh-tac-gia">
-              <Feather size={17} /> Trở thành tác giả
-            </Link>
-          </div>
-          <div className="hero-foot">
-            <span className="tiny-seal">文</span>
-            <span>
-              Dành một khoảng lặng.
-              <br />
-              <strong>Để trí tưởng tượng đi thật xa.</strong>
-            </span>
-          </div>
+      <div className="home-intro">
+        <div>
+          <span className="eyebrow">THƯ VIỆN CỦA NHỮNG THẾ GIỚI</span>
+          <h1>Tìm câu chuyện dành cho bạn.</h1>
         </div>
-        <div className="hero-art" aria-hidden="true">
-          <div className="hero-sun" />
-          <div className="landscape layer-back" />
-          <div className="landscape layer-mid" />
-          <div className="landscape layer-front" />
-          <div className="vertical-poem">VẠN DẶM SƠN HÀ · MỘT TRANG CỐ SỰ</div>
-          <div className="hero-book hero-book-back">
-            <Cover story={stories[1] || sample[1]} large />
+        <form action="/tim-kiem" className="home-search">
+          <Search size={19} />
+          <input
+            name="q"
+            aria-label="Tìm tên truyện hoặc tác giả"
+            placeholder="Tên truyện, tác giả…"
+            maxLength={100}
+          />
+          <button aria-label="Tìm kiếm">
+            <ArrowRight size={20} />
+          </button>
+        </form>
+      </div>
+      <section className="home-feature-layout" aria-label="Truyện nổi bật">
+        <div className="spotlight">
+          <div className="spotlight-halo" />
+          <div className="spotlight-copy">
+            <span className="spotlight-label">
+              <Sparkles size={14} /> TRUYỆN NỔI BẬT
+            </span>
+            <span className="spotlight-genre">
+              {featured.genre} / {featured.progress}
+            </span>
+            <h2>{featured.title}</h2>
+            <p>{featured.description}</p>
+            <div className="spotlight-meta">
+              <span>{featured.penName}</span>
+              <span>·</span>
+              <span>{format(featured.chapterCount)} chương</span>
+            </div>
+            <Link
+              className="btn spotlight-cta"
+              href={`/truyen/${featured.slug}/1`}
+            >
+              <BookOpen size={17} /> Bắt đầu đọc <ArrowUpRight size={17} />
+            </Link>
           </div>
           <Link
+            className="spotlight-book"
             href={`/truyen/${featured.slug}`}
-            className="hero-book hero-book-front"
-            tabIndex={-1}
+            aria-label={`Khám phá ${featured.title}`}
           >
             <Cover story={featured} large />
           </Link>
-          <span className="art-spark spark-one">✦</span>
-          <span className="art-spark spark-two">✧</span>
-          <div className="hero-caption">
-            <span className="caption-line" />
-            <span>ĐỀ CỬ THÁNG NÀY</span>
-          </div>
+          <span className="spotlight-index" aria-hidden="true">
+            01 / TIÊN TRUYỆN
+          </span>
         </div>
+        <aside className="home-completed">
+          <div className="home-aside-heading">
+            <span className="eyebrow">ĐỌC TRỌN MỘT HÀNH TRÌNH</span>
+            <h2>
+              Đã hoàn thành <CheckCircle2 size={18} />
+            </h2>
+          </div>
+          {completed.map((s) => (
+            <Link
+              className="completed-row"
+              key={s.id}
+              href={`/truyen/${s.slug}`}
+            >
+              <div className="completed-cover">
+                <Cover story={s} />
+              </div>
+              <div>
+                <span>{s.genre}</span>
+                <h3>{s.title}</h3>
+                <p>{s.penName}</p>
+                <small>{format(s.chapterCount)} chương</small>
+              </div>
+              <ArrowUpRight size={17} />
+            </Link>
+          ))}
+          {!completed.length && (
+            <p className="home-empty">
+              Những câu chuyện trọn vẹn sẽ sớm có mặt.
+            </p>
+          )}
+          <Link className="home-aside-link" href="/tim-kiem">
+            Khám phá thư viện <ArrowRight size={15} />
+          </Link>
+        </aside>
       </section>
-      <section className="discovery">
+      <section className="home-shelf">
         <div className="section-heading">
           <div>
             <span className="eyebrow">CHỌN MỘT THẾ GIỚI</span>
-            <h2>Hôm nay, bạn muốn đọc gì?</h2>
+            <h2>Trên kệ hôm nay</h2>
           </div>
           <Link className="more-link" href="/the-loai/tat-ca">
-            Tất cả thể loại <ArrowUpRight size={16} />
+            Tất cả truyện <ArrowRight size={16} />
           </Link>
         </div>
         <div className="genre-tabs" role="group" aria-label="Lọc theo thể loại">
-          {genres.map((g, i) => (
+          {genres.map((g) => (
             <button
               key={g}
               onClick={() => setGenre(g)}
+              aria-pressed={genre === g}
               className={genre === g ? "selected" : ""}
             >
-              {i === 0 ? (
-                <Sparkles size={15} />
-              ) : (
-                <span className="genre-symbol">
-                  {["", "仙", "劍", "幻", "古", "心", "城"][i]}
-                </span>
-              )}
               {g}
             </button>
           ))}
         </div>
-      </section>
-      <section>
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">NHỮNG CÂU CHUYỆN ĐÁNG ĐỌC</span>
-            <h2>
-              <span className="heading-mark" /> Biên tập viên đề cử
-            </h2>
-          </div>
-          <Link className="more-link" href="/the-loai/tat-ca">
-            Xem tất cả <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div className="recommend-layout">
-          <div className="story-grid">
-            {shown.map((s) => (
-              <StoryCard key={s.id} story={s} />
-            ))}
-          </div>
-          <aside className="ranking-panel">
-            <div className="ranking-title">
-              <span>
-                <TrendingUp size={19} /> Được yêu thích
-              </span>
-              <span className="live-dot" />
-            </div>
-            <p>Những câu chuyện bạn không nên bỏ lỡ</p>
-            {stories.slice(0, 5).map((s, i) => (
-              <Link className="rank-item" key={s.id} href={`/truyen/${s.slug}`}>
-                <span className={`rank-number rank-${i}`}>
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div>
-                  <strong>{s.title}</strong>
-                  <small>
-                    {s.genre} · {s.penName}
-                  </small>
-                </div>
-                {i === 0 && <Flame size={16} />}
-              </Link>
-            ))}
-            <Link className="ranking-bottom" href="/bang-xep-hang">
-              Khám phá bảng xếp hạng <ArrowRight size={14} />
-            </Link>
-          </aside>
-        </div>
-      </section>
-      <section className="new-section">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">
-              THÊM MỘT CHƯƠNG, THÊM MỘT HÀNH TRÌNH
-            </span>
-            <h2>Mới cập nhật</h2>
-          </div>
-          <Link className="more-link" href="/tim-kiem">
-            Xem thêm <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div className="updates">
-          {stories.slice(0, 6).map((s, i) => (
-            <Link className="update-row" key={s.id} href={`/truyen/${s.slug}`}>
-              <div className="mini-cover">
-                <Cover story={s} />
-              </div>
-              <div>
-                <h3>{s.title}</h3>
-                <p>
-                  {s.penName} <span>· {s.genre}</span>
-                </p>
-              </div>
-              <span className="update-chapter">{s.chapterCount} chương</span>
-              <ChevronRight size={16} />
-            </Link>
+        <div className="home-book-grid">
+          {shown.map((s) => (
+            <StoryCard story={s} key={s.id} />
           ))}
         </div>
+        {!shown.length && (
+          <p className="home-empty">
+            Chưa có truyện thuộc thể loại này. Bạn thử một thế giới khác nhé.
+          </p>
+        )}
       </section>
-      <section className="author-banner">
-        <div className="banner-icon">
-          <Feather size={32} />
-        </div>
-        <div>
-          <span className="eyebrow">MỖI TÁC GIẢ LÀ MỘT NGƯỜI KIẾN TẠO</span>
-          <h2>Thế giới của bạn xứng đáng được kể.</h2>
-          <p>Đặt những dòng đầu tiên. Tìm những độc giả đồng điệu.</p>
-        </div>
-        <Link className="btn primary" href="/tro-thanh-tac-gia">
-          Bắt đầu viết <ArrowUpRight size={17} />
+      <div className="home-bottom-grid">
+        <section className="home-updates">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">TIẾP NỐI NHỮNG CÂU CHUYỆN</span>
+              <h2>Mới cập nhật</h2>
+            </div>
+            <Link className="more-link" href="/tim-kiem">
+              Xem thêm <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <div className="updates">
+            {stories.slice(0, 6).map((s) => (
+              <Link
+                className="update-row"
+                key={s.id}
+                href={`/truyen/${s.slug}`}
+              >
+                <div className="mini-cover">
+                  <Cover story={s} />
+                </div>
+                <div>
+                  <h3>{s.title}</h3>
+                  <p>
+                    {s.penName} <span>· {s.genre}</span>
+                  </p>
+                </div>
+                <span className="update-chapter">
+                  {format(s.chapterCount)} chương
+                </span>
+                <ChevronRight size={16} />
+              </Link>
+            ))}
+          </div>
+        </section>
+        <section className="home-ranking">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">GÓC ĐỘC GIẢ</span>
+              <h2>Đánh giá cao</h2>
+            </div>
+            <TrendingUp size={22} />
+          </div>
+          {ranked.map((s, i) => (
+            <Link className="rank-item" key={s.id} href={`/truyen/${s.slug}`}>
+              <span className={`rank-number rank-${i}`}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <strong>{s.title}</strong>
+                <small>
+                  {s.penName} · {s.genre}
+                </small>
+              </div>
+              <span className="home-score">
+                <Star size={12} />
+                {s.rating ? s.rating.toFixed(1) : "Mới"}
+              </span>
+            </Link>
+          ))}
+          <Link className="home-aside-link" href="/bang-xep-hang">
+            Xem bảng xếp hạng <ArrowRight size={15} />
+          </Link>
+        </section>
+      </div>
+      <div className="home-reading-note">
+        <BookOpen size={22} />
+        <p>Một chương mới. Một khoảng lặng cho riêng bạn.</p>
+        <Link href="/tu-truyen">
+          Mở tủ truyện <ArrowRight size={15} />
         </Link>
-      </section>
+      </div>
     </main>
   );
 }
@@ -284,6 +308,11 @@ export function CatalogPage({
     [genre, setGenre] = useState(initialGenre),
     [status, setStatus] = useState("Tất cả"),
     [sort, setSort] = useState(ranking ? "rating" : "new");
+  useEffect(() => {
+    setQuery(
+      new URLSearchParams(window.location.search).get("q")?.slice(0, 100) || "",
+    );
+  }, []);
   let filtered = stories.filter(
     (s) =>
       (genre === "Tất cả" || s.genre === genre) &&
