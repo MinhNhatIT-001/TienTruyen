@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  passwordHash String
+  roles String[] @default(["READER"])
+  emailVerified Boolean @default(false)
+  totalTopupVnd Int @default(0)
+  readerSettings Json @default("{}")
+  createdAt DateTime @default(now())
+  wallet Wallet?
+  sessions Session[]
+  purchases ChapterPurchase[]
+  stories Story[]
+  applications AuthorApplication[]
+  bookmarks Bookmark[]
+  progress ReadingProgress[]
+  comments Comment[]
+  ratings Rating[]
+}
+model Session {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  tokenHash String @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  device String
+  createdAt DateTime @default(now())
+}
+model OneTimeToken {
+  id String @id @default(cuid())
+  userId String
+  tokenHash String @unique
+  purpose String
+  expiresAt DateTime
+  usedAt DateTime?
+}
+model AuthorApplication {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  penName String
+  bio String
+  genres String
+  sampleText String
+  status String @default("PENDING")
+  rejectReason String?
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt DateTime @default(now())
+}
+model Story {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
+  authorId String
+  author User @relation(fields:[authorId],references:[id])
+  penName String
+  description String
+  genre String
+  cover String @default("jade")
+  status String @default("PENDING")
+  progress String @default("Đang ra")
+  rejectReason String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chapters Chapter[]
+  bookmarks Bookmark[]
+  ratings Rating[]
+  comments Comment[]
+}
+model Chapter {
+  id String @id @default(cuid())
+  storyId String
+  story Story @relation(fields:[storyId],references:[id])
+  number Int
+  title String
+  content String
+  contentHash String
+  wordCount Int
+  isFree Boolean @default(true)
+  price Int @default(0)
+  publishedAt DateTime @default(now())
+  hidden Boolean @default(false)
+  countedForLevel Boolean @default(false)
+  purchases ChapterPurchase[]
+  @@unique([storyId,number])
+}
+model Wallet {
+  userId String @id
+  user User @relation(fields:[userId],references:[id])
+  balance Int @default(0)
+}
+model WalletTransaction {
+  id String @id @default(cuid())
+  userId String
+  type String
+  amount Int
+  balanceAfter Int
+  refId String
+  idempotencyKey String @unique
+  createdAt DateTime @default(now())
+  @@index([userId,createdAt])
+}
+model ChapterPurchase {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  chapterId String
+  chapter Chapter @relation(fields:[chapterId],references:[id])
+  pricePaid Int
+  authorShare Int
+  platformShare Int
+  rateApplied Int
+  createdAt DateTime @default(now())
+  @@unique([userId,chapterId])
+}
+model TopupOrder {
+  id String @id @default(cuid())
+  userId String
+  amountVnd Int
+  coinsBase Int
+  coinsBonus Int
+  status String @default("PENDING")
+  providerTxnId String? @unique
+  idempotencyKey String @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+model AuthorEarning {
+  id String @id @default(cuid())
+  authorId String
+  purchaseId String @unique
+  amount Int
+  status String @default("AVAILABLE")
+  createdAt DateTime @default(now())
+}
+model PayoutRequest {
+  id String @id @default(cuid())
+  authorId String
+  amount Int
+  status String @default("PENDING")
+  reviewedBy String?
+  createdAt DateTime @default(now())
+}
+model SystemConfig {
+  key String @id
+  value Json
+}
+model Bookmark {
+  userId String
+  storyId String
+  user User @relation(fields:[userId],references:[id])
+  story Story @relation(fields:[storyId],references:[id])
+  createdAt DateTime @default(now())
+  @@id([userId,storyId])
+}
+model ReadingProgress {
+  userId String
+  storyId String
+  chapter Int
+  user User @relation(fields:[userId],references:[id])
+  updatedAt DateTime @updatedAt
+  @@id([userId,storyId])
+}
+model Comment {
+  id String @id @default(cuid())
+  userId String
+  storyId String
+  user User @relation(fields:[userId],references:[id])
+  story Story @relation(fields:[storyId],references:[id])
+  content String
+  createdAt DateTime @default(now())
+}
+model Rating {
+  userId String
+  storyId String
+  user User @relation(fields:[userId],references:[id])
+  story Story @relation(fields:[storyId],references:[id])
+  score Int
+  @@id([userId,storyId])
+}
+model Report {
+  id String @id @default(cuid())
+  userId String
+  targetId String
+  reason String
+  status String @default("PENDING")
+  createdAt DateTime @default(now())
+}
+model AuditLog {
+  id String @id @default(cuid())
+  actorId String?
+  action String
+  targetId String?
+  meta Json @default("{}")
+  createdAt DateTime @default(now())
+}

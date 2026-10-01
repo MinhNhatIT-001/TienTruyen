@@ -1,0 +1,79 @@
+# Independent production template. Do not combine with the dev Compose file.
+# Complete docs/READINESS.md before accepting real payments.
+services:
+  proxy:
+    image: caddy:2.10.2-alpine
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_HOST: ${SITE_HOST:?Set SITE_HOST}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [web, api]
+    mem_limit: 256m
+    cpus: 0.5
+  web:
+    build: {context: ., dockerfile: apps/web/Dockerfile}
+    environment: {API_INTERNAL_URL: 'http://api:4000'}
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 768m
+    cpus: 1
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  api:
+    build: {context: ., dockerfile: apps/api/Dockerfile}
+    environment:
+      NODE_ENV: production
+      APP_ORIGIN: https://${SITE_HOST:?Set SITE_HOST}
+      DATABASE_URL: postgresql://tientruyen:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/tientruyen
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?Set PAYMENT_WEBHOOK_SECRET}
+      DEV_TOPUP_ENABLED: 'false'
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 768m
+    cpus: 1
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  db:
+    image: postgres:16.11-alpine
+    environment:
+      POSTGRES_USER: tientruyen
+      POSTGRES_DB: tientruyen
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tientruyen"]
+      interval: 10s
+      retries: 10
+    mem_limit: 1g
+    cpus: 1
+  redis:
+    image: redis:7.4.7-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      retries: 10
+    mem_limit: 256m
+    cpus: 0.5
+  search:
+    image: getmeili/meilisearch:v1.12.8
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?Set MEILI_MASTER_KEY}
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: 'true'
+    volumes: ["search-data:/meili_data"]
+    mem_limit: 512m
+    cpus: 0.5
+volumes:
+  postgres-data:
+  search-data:
+  caddy-data:
+  caddy-config:

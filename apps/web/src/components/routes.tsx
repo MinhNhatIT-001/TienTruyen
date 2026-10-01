@@ -1,0 +1,7 @@
+"use client";
+import {CatalogPage} from './catalog';
+import {StoryPage,Reader,ReaderPreferences} from './reader';
+import {AuthPage,Library,Wallet,Levels,AuthorApplication} from './accounts';
+import {Studio,Admin} from './studio';
+import {Empty} from './shell';
+export function RoutePage({path}:{path:string[]}){const first=path[0];if(first==='truyen'&&path[1])return path[2]?<Reader key={path.join('/')} slug={path[1]} number={Number(path[2])}/>:<StoryPage slug={path[1]}/>;if(first==='tim-kiem')return <CatalogPage/>;if(first==='the-loai'){const genre=({'tien-hiep':'Tiên hiệp','kiem-hiep':'Kiếm hiệp','huyen-huyen':'Huyền huyễn','co-dai':'Cổ đại','ngon-tinh':'Ngôn tình','do-thi':'Đô thị'} as Record<string,string>)[path[1]]||'Tất cả';return <CatalogPage initialGenre={genre}/>};if(first==='bang-xep-hang')return <CatalogPage ranking/>;if(first==='dang-nhap'||first==='dang-ky')return <AuthPage key={first} register={first==='dang-ky'}/>;if(first==='tu-truyen'||first==='lich-su')return <Library history={first==='lich-su'}/>;if(first==='nap-hong-ngoc'||first==='lich-su-giao-dich')return <Wallet transactions={first==='lich-su-giao-dich'}/>;if(first==='cap-bac')return <Levels/>;if(first==='cai-dat')return <ReaderPreferences/>;if(first==='tro-thanh-tac-gia')return <AuthorApplication/>;if(first==='tac-gia')return <Studio path={path}/>;if(first==='admin')return <Admin path={path}/>;return <main className="container not-found"><Empty title="Trang này chưa có câu chuyện" text="Trở về thư viện để tiếp tục khám phá nhé." href="/" label="Về trang chủ"/></main>}
