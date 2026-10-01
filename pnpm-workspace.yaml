@@ -2,10 +2,14 @@ packages:
   - apps/*
   - packages/*
 allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
+  "@prisma/client": true
+  "@prisma/engines": true
   prisma: true
   argon2: true
   sharp: true
   esbuild: true
-  '@nestjs/core': false
+  "@nestjs/core": false
+
+overrides:
+  effect: 3.20.0
+  deepmerge-ts: 8.0.0

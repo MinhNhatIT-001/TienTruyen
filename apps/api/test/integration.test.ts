@@ -1,37 +1,333 @@
-import {test} from 'node:test';
-import assert from 'node:assert/strict';
-import {randomUUID,createHmac} from 'node:crypto';
-const base=process.env.INTEGRATION_URL;
-test('PostgreSQL integration: auth, access control, concurrency, webhook integrity and refresh replay', {skip:!base}, async()=>{
- const origin=process.env.TEST_ORIGIN||'http://127.0.0.1:3000';
- const cookies=new Map<string,string>();
- async function call(path:string,method='GET',body?:unknown,extra:Record<string,string>={},authenticated=true){
-  const r=await fetch(base+path,{method,headers:{Origin:origin,'Content-Type':'application/json',...(authenticated?{Cookie:[...cookies].map(([k,v])=>`${k}=${v}`).join('; '),'X-CSRF-Token':cookies.get('tt_csrf')||''}:{}),...extra},body:body===undefined?undefined:JSON.stringify(body)});
-  if(authenticated)for(const c of r.headers.getSetCookie()){const [k,v]=c.split(';')[0].split('=');cookies.set(k,v)}
-  const data=await r.json();return {status:r.status,data};
- }
- const email=`integration-${randomUUID()}@example.invalid`,password=`Test-${randomUUID()}`;
- let r=await call('/auth/register','POST',{name:'Integration test',email,password});assert.equal(r.status,201);
- r=await call('/auth/verify','POST',{token:r.data.devVerifyToken});assert.equal(r.status,201);
- r=await call('/auth/login','POST',{email,password});assert.equal(r.status,201);
- assert(cookies.get('tt_access'));assert(cookies.get('tt_refresh'));
- r=await call('/admin/users');assert.equal(r.status,403,'reader cannot access admin');
- r=await call('/stories/van-dao-truong-sinh/chapters/6');assert.equal(r.status,200);assert.equal(r.data.content,undefined,'paid text must never leak');const chapterId=r.data.id;
- r=await call(`/purchases/${chapterId}`,'POST',undefined,{'Idempotency-Key':randomUUID()});assert.equal(r.status,402);
- r=await call('/wallet/orders','POST',{packageIndex:0},{'Idempotency-Key':randomUUID(),'X-CSRF-Token':'wrong'});assert.equal(r.status,403,'CSRF rejected');
- r=await call('/wallet/orders','POST',{packageIndex:0},{'Idempotency-Key':randomUUID()});assert.equal(r.status,201);const orderId=r.data.id;
- r=await call(`/wallet/orders/${orderId}/simulate`,'POST');assert.equal(r.status,201);assert.equal(r.data.balance,200);
- r=await call(`/wallet/orders/${orderId}/simulate`,'POST');assert.equal(r.data.duplicate,true);
- const buys=await Promise.all(Array.from({length:6},()=>call(`/purchases/${chapterId}`,'POST',undefined,{'Idempotency-Key':randomUUID()})));
- for(const result of buys)assert.equal(result.status,201,JSON.stringify(result));
- r=await call('/auth/me');assert.equal(r.data.balance,180,'concurrent requests debit only once');
- r=await call('/stories/van-dao-truong-sinh/chapters/6');assert.equal(typeof r.data.content,'string');
- r=await call('/stories/van-dao-truong-sinh/chapters/6','GET',undefined,{},false);assert.equal(r.data.content,undefined,'guest cannot reuse purchased content');
- r=await call('/wallet/transactions');assert.equal(r.data.filter((t:any)=>t.type==='PURCHASE').length,1);assert.equal(r.data.filter((t:any)=>t.type==='TOPUP').length,1);
- r=await call('/payments/webhook','POST',{orderId,providerTxnId:'fake',amountVnd:20000},{'X-Payment-Signature':'fake'},false);assert.equal(r.status,401);
- const oldRefresh=cookies.get('tt_refresh')!;
- r=await call('/auth/refresh','POST');assert.equal(r.status,201);
- const newRefresh=cookies.get('tt_refresh')!;assert.notEqual(oldRefresh,newRefresh);
- r=await call('/auth/refresh','POST',undefined,{Cookie:`tt_refresh=${oldRefresh}; tt_csrf=${cookies.get('tt_csrf')}`});assert.equal(r.status,401);
- r=await call('/auth/me');assert.equal(r.status,401,'replay revokes every session');
-});
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { randomUUID, createHmac } from "node:crypto";
+const base = process.env.INTEGRATION_URL;
+test(
+  "PostgreSQL integration: auth, access control, concurrency, webhook integrity and refresh replay",
+  { skip: !base },
+  async () => {
+    const origin = process.env.TEST_ORIGIN || "http://127.0.0.1:3000";
+    const cookies = new Map<string, string>();
+    async function call(
+      path: string,
+      method = "GET",
+      body?: unknown,
+      extra: Record<string, string> = {},
+      authenticated = true,
+    ) {
+      const r = await fetch(base + path, {
+        method,
+        headers: {
+          Origin: origin,
+          "Content-Type": "application/json",
+          ...(authenticated
+            ? {
+                Cookie: [...cookies].map(([k, v]) => `${k}=${v}`).join("; "),
+                "X-CSRF-Token": cookies.get("tt_csrf") || "",
+              }
+            : {}),
+          ...extra,
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      if (authenticated)
+        for (const c of r.headers.getSetCookie()) {
+          const [k, v] = c.split(";")[0].split("=");
+          cookies.set(k, v);
+        }
+      const data = await r.json();
+      return { status: r.status, data };
+    }
+    const email = `integration-${randomUUID()}@example.invalid`,
+      password = `Test-${randomUUID()}`;
+    let r = await call("/auth/register", "POST", {
+      name: "Integration test",
+      email,
+      password,
+    });
+    assert.equal(r.status, 201);
+    r = await call("/auth/verify", "POST", { token: r.data.devVerifyToken });
+    assert.equal(r.status, 201);
+    r = await call("/auth/login", "POST", { email, password });
+    assert.equal(r.status, 201);
+    assert(cookies.get("tt_access"));
+    assert(cookies.get("tt_refresh"));
+    r = await call("/admin/users");
+    assert.equal(r.status, 403, "reader cannot access admin");
+    r = await call("/stories/van-dao-truong-sinh/chapters/6");
+    assert.equal(r.status, 200);
+    assert.equal(r.data.content, undefined, "paid text must never leak");
+    const chapterId = r.data.id;
+    r = await call(`/purchases/${chapterId}`, "POST", undefined, {
+      "Idempotency-Key": randomUUID(),
+    });
+    assert.equal(r.status, 402);
+    r = await call(
+      "/wallet/orders",
+      "POST",
+      { packageIndex: 0 },
+      { "Idempotency-Key": randomUUID(), "X-CSRF-Token": "wrong" },
+    );
+    assert.equal(r.status, 403, "CSRF rejected");
+    r = await call(
+      "/wallet/orders",
+      "POST",
+      { packageIndex: 0 },
+      { "Idempotency-Key": randomUUID() },
+    );
+    assert.equal(r.status, 201);
+    const orderId = r.data.id;
+    r = await call(`/wallet/orders/${orderId}/simulate`, "POST");
+    assert.equal(r.status, 201);
+    assert.equal(r.data.balance, 200);
+    r = await call(`/wallet/orders/${orderId}/simulate`, "POST");
+    assert.equal(r.data.duplicate, true);
+    const buys = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        call(`/purchases/${chapterId}`, "POST", undefined, {
+          "Idempotency-Key": randomUUID(),
+        }),
+      ),
+    );
+    for (const result of buys)
+      assert.equal(result.status, 201, JSON.stringify(result));
+    r = await call("/auth/me");
+    assert.equal(r.data.balance, 180, "concurrent requests debit only once");
+    r = await call("/stories/van-dao-truong-sinh/chapters/6");
+    assert.equal(typeof r.data.content, "string");
+    r = await call(
+      "/stories/van-dao-truong-sinh/chapters/6",
+      "GET",
+      undefined,
+      {},
+      false,
+    );
+    assert.equal(
+      r.data.content,
+      undefined,
+      "guest cannot reuse purchased content",
+    );
+    r = await call("/wallet/transactions");
+    assert.equal(r.data.filter((t: any) => t.type === "PURCHASE").length, 1);
+    assert.equal(r.data.filter((t: any) => t.type === "TOPUP").length, 1);
+    r = await call(
+      "/payments/webhook",
+      "POST",
+      { orderId, providerTxnId: "fake", amountVnd: 20000 },
+      { "X-Payment-Signature": "fake" },
+      false,
+    );
+    assert.equal(r.status, 401);
+    if (process.env.PAYMENT_WEBHOOK_SECRET) {
+      const pending = await call(
+        "/wallet/orders",
+        "POST",
+        { packageIndex: 0 },
+        { "Idempotency-Key": randomUUID() },
+      );
+      assert.equal(pending.status, 201);
+      const payload = {
+        orderId: pending.data.id,
+        providerTxnId: `signed-${randomUUID()}`,
+        amountVnd: 20000,
+      };
+      const signature = createHmac("sha256", process.env.PAYMENT_WEBHOOK_SECRET)
+        .update(JSON.stringify(payload))
+        .digest("hex");
+      r = await call(
+        "/payments/webhook",
+        "POST",
+        payload,
+        { "X-Payment-Signature": signature },
+        false,
+      );
+      assert.equal(r.status, 201, JSON.stringify(r));
+      r = await call(
+        "/payments/webhook",
+        "POST",
+        payload,
+        { "X-Payment-Signature": signature },
+        false,
+      );
+      assert.equal(r.data.duplicate, true);
+      r = await call("/auth/me");
+      assert.equal(
+        r.data.balance,
+        380,
+        "duplicate signed webhook credits once",
+      );
+    }
+    const oldRefresh = cookies.get("tt_refresh")!;
+    r = await call("/auth/refresh", "POST");
+    assert.equal(r.status, 201);
+    const newRefresh = cookies.get("tt_refresh")!;
+    assert.notEqual(oldRefresh, newRefresh);
+    r = await call("/auth/refresh", "POST", undefined, {
+      Cookie: `tt_refresh=${oldRefresh}; tt_csrf=${cookies.get("tt_csrf")}`,
+    });
+    assert.equal(r.status, 401);
+    r = await call("/auth/me");
+    assert.equal(r.status, 401, "replay revokes every session");
+  },
+);
+
+import { PrismaClient } from "@prisma/client";
+import { totp } from "../src/security";
+test(
+  "Author/admin integration: mandatory 2FA, story approval, free chapters and IDOR",
+  { skip: !base || !process.env.DATABASE_URL },
+  async () => {
+    const db = new PrismaClient();
+    const origin = process.env.TEST_ORIGIN || "http://127.0.0.1:3000";
+    const cookies = new Map<string, string>();
+    async function call(path: string, method = "GET", body?: unknown) {
+      const r = await fetch(base + path, {
+        method,
+        headers: {
+          Origin: origin,
+          "Content-Type": "application/json",
+          Cookie: [...cookies].map(([k, v]) => `${k}=${v}`).join("; "),
+          "X-CSRF-Token": cookies.get("tt_csrf") || "",
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      for (const c of r.headers.getSetCookie()) {
+        const [k, v] = c.split(";")[0].split("=");
+        cookies.set(k, v);
+      }
+      return { status: r.status, data: await r.json() };
+    }
+    const email = `integration-author-${randomUUID()}@example.invalid`,
+      password = `Test-${randomUUID()}`;
+    try {
+      let r = await call("/auth/register", "POST", {
+        name: "Integration author",
+        email,
+        password,
+      });
+      assert.equal(r.status, 201);
+      r = await call("/auth/verify", "POST", { token: r.data.devVerifyToken });
+      assert.equal(r.status, 201);
+      r = await call("/auth/login", "POST", { email, password });
+      assert.equal(r.status, 201);
+      const user = await db.user.findUniqueOrThrow({ where: { email } });
+      // Test-only fixture: never modifies an existing real user's permissions.
+      await db.user.update({
+        where: { id: user.id },
+        data: { roles: ["READER", "AUTHOR", "ADMIN"] },
+      });
+      r = await call("/admin/users");
+      assert.equal(r.status, 403, "privileged account must enroll MFA");
+      r = await call("/auth/2fa/setup", "POST", { password });
+      assert.equal(r.status, 201, JSON.stringify(r));
+      const secret = r.data.secret;
+      r = await call("/auth/2fa/enable", "POST", {
+        code: totp(secret, Math.floor(Date.now() / 30000)),
+      });
+      assert.equal(r.status, 201);
+      r = await call("/admin/users");
+      assert.equal(r.status, 200);
+      r = await call("/author/stories", "POST", {
+        title: "Truyện kiểm thử tự động",
+        description:
+          "Câu chuyện dùng để kiểm thử quyền tác giả và quy trình duyệt truyện.",
+        genre: "Tiên hiệp",
+        cover: "jade",
+      });
+      assert.equal(r.status, 201, JSON.stringify(r));
+      const storyId = r.data.id;
+      r = await call(`/author/stories/${storyId}/chapters`, "POST", {
+        title: "Chương chưa duyệt",
+        content: "Nội dung kiểm thử ".repeat(50),
+        isFree: true,
+        price: 0,
+      });
+      assert.equal(r.status, 400);
+      r = await call("/admin/review", "POST", {
+        kind: "story",
+        id: storyId,
+        approve: true,
+      });
+      assert.equal(r.status, 201);
+      r = await call(`/author/stories/${storyId}/chapters`, "POST", {
+        title: "Không được khóa chương đầu",
+        content: "Nội dung kiểm thử ".repeat(50),
+        isFree: false,
+        price: 20,
+      });
+      assert.equal(r.status, 400);
+      r = await call(`/author/stories/${storyId}/chapters`, "POST", {
+        title: "Chương đầu miễn phí",
+        content: "Nội dung kiểm thử ".repeat(50),
+        isFree: true,
+        price: 0,
+      });
+      assert.equal(r.status, 201, JSON.stringify(r));
+      const chapterId = r.data.id;
+      r = await call(`/author/stories/${storyId}/prices`, "PUT", {
+        from: 1,
+        to: 1,
+        isFree: false,
+        price: 20,
+      });
+      assert.equal(r.status, 400);
+      r = await call("/author/stories/story-1");
+      assert.equal(
+        r.status,
+        404,
+        "authors cannot access another author draft/editor",
+      );
+      r = await call("/author/payouts", "POST");
+      assert.equal(r.status, 400, "zero earnings cannot be withdrawn");
+      await assert.rejects(() =>
+        db.wallet.update({ where: { userId: user.id }, data: { balance: -1 } }),
+      );
+      assert.equal(
+        (await db.wallet.findUniqueOrThrow({ where: { userId: user.id } }))
+          .balance,
+        0,
+      );
+      const purchase = await db.chapterPurchase.findFirst({
+        where: {
+          user: {
+            email: { startsWith: "integration-" },
+            name: "Integration test",
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      assert(purchase);
+      const before = await db.wallet.findUniqueOrThrow({
+        where: { userId: purchase.userId },
+      });
+      r = await call(`/admin/refunds/${purchase.id}`, "POST");
+      assert.equal(r.status, 201);
+      r = await call(`/admin/refunds/${purchase.id}`, "POST");
+      assert.equal(r.data.duplicate, true);
+      assert.equal(
+        (
+          await db.wallet.findUniqueOrThrow({
+            where: { userId: purchase.userId },
+          })
+        ).balance,
+        before.balance + purchase.pricePaid,
+      );
+      const ledger = await db.walletTransaction.findFirstOrThrow({
+        where: { userId: purchase.userId },
+      });
+      await assert.rejects(() =>
+        db.walletTransaction.update({
+          where: { id: ledger.id },
+          data: { amount: 999999 },
+        }),
+      );
+      // Hide only the synthetic fixture so it does not appear in the reading catalog.
+      await db.story.update({
+        where: { id: storyId },
+        data: { status: "HIDDEN" },
+      });
+    } finally {
+      await db.$disconnect();
+    }
+  },
+);

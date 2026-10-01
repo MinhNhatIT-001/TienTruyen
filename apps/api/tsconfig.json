@@ -8,7 +8,5 @@
     "emitDecoratorMetadata": true,
     "rootDir": "src"
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

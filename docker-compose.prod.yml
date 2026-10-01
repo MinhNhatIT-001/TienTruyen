@@ -14,8 +14,8 @@ services:
     mem_limit: 256m
     cpus: 0.5
   web:
-    build: {context: ., dockerfile: apps/web/Dockerfile}
-    environment: {API_INTERNAL_URL: 'http://api:4000'}
+    build: { context: ., dockerfile: apps/web/Dockerfile }
+    environment: { API_INTERNAL_URL: "http://api:4000" }
     read_only: true
     tmpfs: [/tmp]
     mem_limit: 768m
@@ -23,18 +23,22 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
   api:
-    build: {context: ., dockerfile: apps/api/Dockerfile}
+    build: { context: ., dockerfile: apps/api/Dockerfile }
     environment:
       NODE_ENV: production
+      TRUST_PROXY: "1"
       APP_ORIGIN: https://${SITE_HOST:?Set SITE_HOST}
       DATABASE_URL: postgresql://tientruyen:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/tientruyen
       REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD}@redis:6379
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
       PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?Set PAYMENT_WEBHOOK_SECRET}
-      DEV_TOPUP_ENABLED: 'false'
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:?Set TOTP_ENCRYPTION_KEY}
+      SMTP_URL: ${SMTP_URL:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@example.invalid}
+      DEV_TOPUP_ENABLED: "false"
     depends_on:
-      db: {condition: service_healthy}
-      redis: {condition: service_healthy}
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
     read_only: true
     tmpfs: [/tmp]
     mem_limit: 768m
@@ -56,7 +60,8 @@ services:
     cpus: 1
   redis:
     image: redis:7.4.7-alpine
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD}"]
+    command:
+      ["redis-server", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD}"]
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
@@ -68,7 +73,7 @@ services:
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?Set MEILI_MASTER_KEY}
       MEILI_ENV: production
-      MEILI_NO_ANALYTICS: 'true'
+      MEILI_NO_ANALYTICS: "true"
     volumes: ["search-data:/meili_data"]
     mem_limit: 512m
     cpus: 0.5

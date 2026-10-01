@@ -1,0 +1,3 @@
+ALTER TABLE "User" ADD COLUMN "twoFactorSecret" TEXT;
+ALTER TABLE "User" ADD COLUMN "twoFactorPending" TEXT;
+ALTER TABLE "User" ADD COLUMN "twoFactorLastCounter" INTEGER NOT NULL DEFAULT 0;

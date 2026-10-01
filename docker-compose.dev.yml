@@ -1,0 +1,17 @@
+# Hot reload override: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+services:
+  web:
+    build:
+      target: build
+    working_dir: /app/apps/web
+    command: ["pnpm", "dev"]
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/next.config.ts:/app/apps/web/next.config.ts:ro
+  api:
+    build:
+      target: build
+    working_dir: /app/apps/api
+    command: ["pnpm", "dev"]
+    volumes:
+      - ./apps/api/src:/app/apps/api/src

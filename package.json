@@ -11,7 +11,8 @@
     "db:migrate": "pnpm --filter @tientruyen/api db:migrate",
     "db:seed": "pnpm --filter @tientruyen/api db:seed",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "local": "node scripts/local.mjs"
   },
   "devDependencies": {
     "typescript": "~5.9.3",

@@ -1,6 +1,7 @@
-FROM node:22.16.0-bookworm-slim AS build
+FROM node:22.16.0-bookworm-slim AS base
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN npm install -g pnpm@11.19.0
+FROM base AS build
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
@@ -8,7 +9,9 @@ COPY apps/web/package.json apps/web/package.json
 RUN pnpm install --frozen-lockfile
 COPY apps/api apps/api
 RUN pnpm --filter @tientruyen/api db:generate && pnpm --filter @tientruyen/api build
-RUN chown -R node:node /app
+FROM base AS runtime
+WORKDIR /app
+COPY --from=build --chown=node:node /app /app
 USER node
 WORKDIR /app/apps/api
 EXPOSE 4000

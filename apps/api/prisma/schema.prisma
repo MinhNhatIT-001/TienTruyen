@@ -12,6 +12,9 @@ model User {
   passwordHash String
   roles String[] @default(["READER"])
   emailVerified Boolean @default(false)
+  twoFactorSecret String?
+  twoFactorPending String?
+  twoFactorLastCounter Int @default(0)
   totalTopupVnd Int @default(0)
   readerSettings Json @default("{}")
   createdAt DateTime @default(now())

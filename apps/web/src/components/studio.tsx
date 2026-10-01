@@ -1,9 +1,487 @@
 "use client";
-import Link from 'next/link';
-import {useEffect,useState} from 'react';
-import {ArrowRight,Plus,Feather} from 'lucide-react';
-import {api} from '../lib/api';
-import {useApp,Empty} from './shell';
-import {format} from '../lib/types';
-export function Studio({path}:{path:string[]}){const {user,notify}=useApp();const [rows,setRows]=useState<any[]>([]),[story,setStory]=useState<any>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[earnings,setEarnings]=useState<any>(null);const isNew=path[1]==='truyen-moi',isChapter=path[1]==='truyen'&&path[2],isRevenue=path[1]==='doanh-thu'||path[1]==='cap-bac';useEffect(()=>{if(user?.roles.includes('AUTHOR')){if(isChapter)api(`/author/stories/${path[2]}`).then(setStory).catch(e=>setError(e.message));else if(isRevenue)api('/author/earnings').then(setEarnings).catch(e=>setError(e.message));else api<any[]>('/author/stories').then(setRows).catch(e=>setError(e.message))}},[user,isChapter,isRevenue,path[2]]);return <main className="container page"><div className="page-intro"><span className="eyebrow">KHÔNG GIAN SÁNG TÁC</span><h1>{isNew?'Khởi đầu một thế giới mới.':isChapter?'Viết tiếp hành trình.':isRevenue?'Thành quả từ từng trang viết.':'Chào người kể chuyện.'}</h1><p>Mỗi câu chữ đều có thể trở thành một nơi để ai đó tìm về.</p></div><nav className="dashboard-nav"><Link href="/tac-gia">Truyện của tôi</Link><Link href="/tac-gia/truyen-moi">Tạo truyện mới</Link><Link href="/tac-gia/doanh-thu">Doanh thu & cấp bậc</Link></nav>{!user?.roles.includes('AUTHOR')?<Empty title="Cánh cửa dành cho tác giả" text="Bạn cần hồ sơ tác giả được duyệt để bắt đầu đăng truyện." href="/tro-thanh-tac-gia" label="Gửi hồ sơ tác giả"/>:<>{error&&<p className="error">{error}</p>}{isNew||isChapter?<form className="standard-form narrow-page" onSubmit={async e=>{e.preventDefault();setError('');setBusy(true);const d=new FormData(e.currentTarget),form=e.currentTarget;try{const body=isNew?{title:d.get('title'),description:d.get('description'),genre:d.get('genre'),cover:d.get('cover')}:{title:d.get('title'),content:d.get('content'),isFree:d.get('free')==='on',price:Number(d.get('price')||0)};await api(isNew?'/author/stories':`/author/stories/${path[2]}/chapters`,{method:'POST',body:JSON.stringify(body)});notify(isNew?'Đã gửi truyện để ban biên tập duyệt.':'Chương mới đã được xuất bản.');form.reset();if(isChapter)setStory(await api(`/author/stories/${path[2]}`))}catch(e){setError((e as Error).message)}finally{setBusy(false)}}}>{isChapter&&<div className="notice">{story?.title} · {story?.chapters?.length||0} chương. Truyện phải được duyệt trước khi xuất bản chương.</div>}<label className="field">{isNew?'Tên truyện':'Tên chương'}<input name="title" required minLength={3} maxLength={120}/></label>{isNew?<><div className="form-columns"><label className="field">Thể loại<select name="genre">{['Tiên hiệp','Kiếm hiệp','Huyền huyễn','Cổ đại','Ngôn tình','Đô thị'].map(g=><option key={g}>{g}</option>)}</select></label><label className="field">Bìa minh họa<select name="cover"><option value="jade">Sơn thủy · Xanh ngọc</option><option value="ink">Giang hồ · Mực xanh</option><option value="rose">Cố sự · Hồng phấn</option><option value="violet">Tinh hà · Tím đêm</option><option value="amber">Trường An · Vàng đồng</option></select></label></div><label className="field">Giới thiệu truyện<textarea name="description" required minLength={30} maxLength={5000} className="editor-area"/></label></>:<><label className="field">Nội dung chương<textarea name="content" required minLength={100} maxLength={200000} className="editor-area"/></label><div className="form-columns"><label className="checkbox"><input type="checkbox" name="free" defaultChecked/>Chương miễn phí</label><label className="field">Giá khi khóa (HN)<input type="number" name="price" min="5" max="100" defaultValue="20"/></label></div><p className="form-caption">5 chương đầu phải miễn phí. Chương từ 1.000 chữ mới đủ điều kiện tính cấp; tối đa 5 chương/ngày, không tính nội dung trùng.</p></>}<button className="btn primary" disabled={busy}>{busy?'Đang lưu…':isNew?'Gửi truyện để duyệt':'Xuất bản chương'}<ArrowRight size={16}/></button></form>:isRevenue?<div className="account-grid"><div className="panel"><h2>Doanh thu khả dụng</h2><p>{format(earnings?.total||0)} HN</p><p>Yêu cầu rút tiền sẽ được triển khai sau khi kết nối quy trình chi trả.</p></div><div className="panel"><h2>{earnings?.tier?.[0]||'Đang tải…'}</h2><p>Tỷ lệ doanh thu: {earnings?.tier?.[4]||70}%</p><p>Giá chương tối đa: {earnings?.tier?.[2]||20} HN</p></div></div>:rows.length?<div className="data-list">{rows.map(s=><div className="data-row" key={s.id}><div><h3>{s.title}</h3><p>{s._count.chapters} chương · {{PENDING:'Chờ duyệt',APPROVED:'Đã duyệt',REJECTED:'Bị từ chối'}[s.status as string]||s.status}</p>{s.rejectReason&&<p className="error">{s.rejectReason}</p>}</div><Link className="btn secondary" href={`/tac-gia/truyen/${s.id}`}><Feather size={14}/>Viết chương</Link></div>)}</div>:<Empty title="Trang giấy đầu tiên của bạn" text="Tạo truyện, gửi ban biên tập duyệt, rồi bắt đầu đăng chương." href="/tac-gia/truyen-moi" label="Tạo truyện mới"/>}</>}</main>}
-export function Admin({path}:{path:string[]}){const {user,notify}=useApp();const section=({'ho-so-tac-gia':'applications','duyet-truyen':'stories','nguoi-dung':'users','bao-cao':'reports','giao-dich':'transactions','nhat-ky':'audit'} as Record<string,string>)[path[1]]||'applications';const [rows,setRows]=useState<any[]>([]),[error,setError]=useState('');const load=()=>api<any[]>(`/admin/${section}`).then(setRows).catch(e=>setError(e.message));useEffect(()=>{if(user?.roles.includes('ADMIN'))void load()},[user,section]);async function review(id:string,approve:boolean){const reason=approve?undefined:window.prompt('Lý do từ chối:');if(!approve&&!reason)return;try{await api('/admin/review',{method:'POST',body:JSON.stringify({kind:section==='applications'?'application':'story',id,approve,reason})});notify('Đã cập nhật kết quả duyệt.');void load()}catch(e){setError((e as Error).message)}}return <main className="container page"><div className="page-intro"><span className="eyebrow">BAN BIÊN TẬP</span><h1>Quản trị Tiên Truyện</h1><p>Duyệt nội dung và theo dõi hoạt động của nền tảng.</p></div>{!user?.roles.includes('ADMIN')?<Empty title="Khu vực quản trị" text="Bạn cần tài khoản có quyền quản trị để truy cập."/>:<><nav className="dashboard-nav">{[['ho-so-tac-gia','Hồ sơ tác giả'],['duyet-truyen','Duyệt truyện'],['nguoi-dung','Người dùng'],['bao-cao','Báo cáo'],['giao-dich','Giao dịch'],['nhat-ky','Nhật ký']].map(([href,label])=><Link key={href} href={`/admin/${href}`}>{label}</Link>)}</nav>{error&&<p className="error">{error}</p>}{rows.length?<div className="data-list">{rows.map(r=><div className="data-row" key={r.id}><div><h3>{r.title||r.penName||r.name||r.action||r.type||r.targetId}</h3><p>{r.email||r.bio||r.description||r.reason||r.id}</p>{r.sampleText&&<details><summary>Đọc văn mẫu</summary><p style={{whiteSpace:'pre-wrap'}}>{r.sampleText}</p></details>}{r.amount!==undefined&&<p>{format(r.amount)} HN</p>}</div>{['applications','stories'].includes(section)&&<div className="row-actions"><button className="btn primary" onClick={()=>review(r.id,true)}>Duyệt</button><button className="btn secondary" onClick={()=>review(r.id,false)}>Từ chối</button></div>}</div>)}</div>:<div className="empty"><h2>Không có mục chờ xử lý</h2><p>Các yêu cầu mới sẽ xuất hiện tại đây.</p></div>}</>}</main>}
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ArrowRight, Plus, Feather } from "lucide-react";
+import { ChapterManager } from "./management";
+import { api } from "../lib/api";
+import { useApp, Empty } from "./shell";
+import { format } from "../lib/types";
+export function Studio({ path }: { path: string[] }) {
+  const { user, notify } = useApp();
+  const [rows, setRows] = useState<any[]>([]),
+    [story, setStory] = useState<any>(null),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false),
+    [earnings, setEarnings] = useState<any>(null);
+  const isNew = path[1] === "truyen-moi",
+    isChapter = path[1] === "truyen" && path[2],
+    isRevenue = path[1] === "doanh-thu" || path[1] === "cap-bac";
+  useEffect(() => {
+    if (user?.roles.includes("AUTHOR")) {
+      if (isChapter)
+        api(`/author/stories/${path[2]}`)
+          .then(setStory)
+          .catch((e) => setError(e.message));
+      else if (isRevenue)
+        api("/author/earnings")
+          .then(setEarnings)
+          .catch((e) => setError(e.message));
+      else
+        api<any[]>("/author/stories")
+          .then(setRows)
+          .catch((e) => setError(e.message));
+    }
+  }, [user, isChapter, isRevenue, path[2]]);
+  return (
+    <main className="container page">
+      <div className="page-intro">
+        <span className="eyebrow">KHÔNG GIAN SÁNG TÁC</span>
+        <h1>
+          {isNew
+            ? "Khởi đầu một thế giới mới."
+            : isChapter
+              ? "Viết tiếp hành trình."
+              : isRevenue
+                ? "Thành quả từ từng trang viết."
+                : "Chào người kể chuyện."}
+        </h1>
+        <p>Mỗi câu chữ đều có thể trở thành một nơi để ai đó tìm về.</p>
+      </div>
+      <nav className="dashboard-nav">
+        <Link href="/tac-gia">Truyện của tôi</Link>
+        <Link href="/tac-gia/truyen-moi">Tạo truyện mới</Link>
+        <Link href="/tac-gia/doanh-thu">Doanh thu & cấp bậc</Link>
+      </nav>
+      {!user?.roles.includes("AUTHOR") ? (
+        <Empty
+          title="Cánh cửa dành cho tác giả"
+          text="Bạn cần hồ sơ tác giả được duyệt để bắt đầu đăng truyện."
+          href="/tro-thanh-tac-gia"
+          label="Gửi hồ sơ tác giả"
+        />
+      ) : (
+        <>
+          {error && <p className="error">{error}</p>}
+          {isNew || isChapter ? (
+            <form
+              className="standard-form narrow-page"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setError("");
+                setBusy(true);
+                const d = new FormData(e.currentTarget),
+                  form = e.currentTarget;
+                try {
+                  const body = isNew
+                    ? {
+                        title: d.get("title"),
+                        description: d.get("description"),
+                        genre: d.get("genre"),
+                        cover: d.get("cover"),
+                      }
+                    : {
+                        title: d.get("title"),
+                        content: d.get("content"),
+                        isFree: d.get("free") === "on",
+                        price: Number(d.get("price") || 0),
+                      };
+                  await api(
+                    isNew
+                      ? "/author/stories"
+                      : `/author/stories/${path[2]}/chapters`,
+                    { method: "POST", body: JSON.stringify(body) },
+                  );
+                  notify(
+                    isNew
+                      ? "Đã gửi truyện để ban biên tập duyệt."
+                      : "Chương mới đã được xuất bản.",
+                  );
+                  form.reset();
+                  if (isChapter)
+                    setStory(await api(`/author/stories/${path[2]}`));
+                } catch (e) {
+                  setError((e as Error).message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {isChapter && (
+                <div className="notice">
+                  {story?.title} · {story?.chapters?.length || 0} chương. Truyện
+                  phải được duyệt trước khi xuất bản chương.
+                </div>
+              )}
+              <label className="field">
+                {isNew ? "Tên truyện" : "Tên chương"}
+                <input name="title" required minLength={3} maxLength={120} />
+              </label>
+              {isNew ? (
+                <>
+                  <div className="form-columns">
+                    <label className="field">
+                      Thể loại
+                      <select name="genre">
+                        {[
+                          "Tiên hiệp",
+                          "Kiếm hiệp",
+                          "Huyền huyễn",
+                          "Cổ đại",
+                          "Ngôn tình",
+                          "Đô thị",
+                        ].map((g) => (
+                          <option key={g}>{g}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field">
+                      Bìa minh họa
+                      <select name="cover">
+                        <option value="jade">Sơn thủy · Xanh ngọc</option>
+                        <option value="ink">Giang hồ · Mực xanh</option>
+                        <option value="rose">Cố sự · Hồng phấn</option>
+                        <option value="violet">Tinh hà · Tím đêm</option>
+                        <option value="amber">Trường An · Vàng đồng</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label className="field">
+                    Giới thiệu truyện
+                    <textarea
+                      name="description"
+                      required
+                      minLength={30}
+                      maxLength={5000}
+                      className="editor-area"
+                    />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label className="field">
+                    Nội dung chương
+                    <textarea
+                      name="content"
+                      required
+                      minLength={100}
+                      maxLength={200000}
+                      className="editor-area"
+                    />
+                  </label>
+                  <div className="form-columns">
+                    <label className="checkbox">
+                      <input type="checkbox" name="free" defaultChecked />
+                      Chương miễn phí
+                    </label>
+                    <label className="field">
+                      Giá khi khóa (HN)
+                      <input
+                        type="number"
+                        name="price"
+                        min="5"
+                        max="100"
+                        defaultValue="20"
+                      />
+                    </label>
+                  </div>
+                  <p className="form-caption">
+                    5 chương đầu phải miễn phí. Chương từ 1.000 chữ mới đủ điều
+                    kiện tính cấp; tối đa 5 chương/ngày, không tính nội dung
+                    trùng.
+                  </p>
+                </>
+              )}
+              <button className="btn primary" disabled={busy}>
+                {busy
+                  ? "Đang lưu…"
+                  : isNew
+                    ? "Gửi truyện để duyệt"
+                    : "Xuất bản chương"}
+                <ArrowRight size={16} />
+              </button>
+            </form>
+          ) : isRevenue ? (
+            <div className="account-grid">
+              <div className="panel">
+                <h2>Doanh thu khả dụng</h2>
+                <p>{format(earnings?.total || 0)} HN</p>
+                <p>
+                  Rút toàn bộ doanh thu khả dụng, tối thiểu theo cấu hình nền
+                  tảng. Ban quản trị xác nhận chi trả thủ công.
+                </p>
+                <button
+                  className="btn primary"
+                  onClick={async () => {
+                    try {
+                      await api("/author/payouts", { method: "POST" });
+                      setEarnings(await api("/author/earnings"));
+                      notify("Đã gửi yêu cầu rút tiền.");
+                    } catch (e) {
+                      setError((e as Error).message);
+                    }
+                  }}
+                >
+                  Yêu cầu rút doanh thu
+                </button>
+              </div>
+              <div className="panel">
+                <h2>{earnings?.tier?.[0] || "Đang tải…"}</h2>
+                <p>Tỷ lệ doanh thu: {earnings?.tier?.[4] || 70}%</p>
+                <p>Giá chương tối đa: {earnings?.tier?.[2] || 20} HN</p>
+              </div>
+            </div>
+          ) : rows.length ? (
+            <div className="data-list">
+              {rows.map((s) => (
+                <div className="data-row" key={s.id}>
+                  <div>
+                    <h3>{s.title}</h3>
+                    <p>
+                      {s._count.chapters} chương ·{" "}
+                      {{
+                        PENDING: "Chờ duyệt",
+                        APPROVED: "Đã duyệt",
+                        REJECTED: "Bị từ chối",
+                      }[s.status as string] || s.status}
+                    </p>
+                    {s.rejectReason && (
+                      <p className="error">{s.rejectReason}</p>
+                    )}
+                  </div>
+                  <Link
+                    className="btn secondary"
+                    href={`/tac-gia/truyen/${s.id}`}
+                  >
+                    <Feather size={14} />
+                    Viết chương
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty
+              title="Trang giấy đầu tiên của bạn"
+              text="Tạo truyện, gửi ban biên tập duyệt, rồi bắt đầu đăng chương."
+              href="/tac-gia/truyen-moi"
+              label="Tạo truyện mới"
+            />
+          )}
+          {isChapter && <ChapterManager story={story} />}
+        </>
+      )}
+    </main>
+  );
+}
+export function Admin({ path }: { path: string[] }) {
+  const { user, notify } = useApp();
+  const section =
+    (
+      {
+        "ho-so-tac-gia": "applications",
+        "duyet-truyen": "stories",
+        "nguoi-dung": "users",
+        "bao-cao": "reports",
+        "giao-dich": "transactions",
+        "nhat-ky": "audit",
+        "rut-tien": "payouts",
+        "luot-mua": "purchases",
+      } as Record<string, string>
+    )[path[1]] || "applications";
+  const [rows, setRows] = useState<any[]>([]),
+    [error, setError] = useState("");
+  const load = () =>
+    api<any[]>(`/admin/${section}`)
+      .then(setRows)
+      .catch((e) => setError(e.message));
+  useEffect(() => {
+    if (user?.roles.includes("ADMIN")) void load();
+  }, [user, section]);
+  async function review(id: string, approve: boolean) {
+    const reason = approve ? undefined : window.prompt("Lý do từ chối:");
+    if (!approve && !reason) return;
+    try {
+      await api("/admin/review", {
+        method: "POST",
+        body: JSON.stringify({
+          kind: section === "applications" ? "application" : "story",
+          id,
+          approve,
+          reason,
+        }),
+      });
+      notify("Đã cập nhật kết quả duyệt.");
+      void load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  return (
+    <main className="container page">
+      <div className="page-intro">
+        <span className="eyebrow">BAN BIÊN TẬP</span>
+        <h1>Quản trị Tiên Truyện</h1>
+        <p>Duyệt nội dung và theo dõi hoạt động của nền tảng.</p>
+      </div>
+      {!user?.roles.includes("ADMIN") ? (
+        <Empty
+          title="Khu vực quản trị"
+          text="Bạn cần tài khoản có quyền quản trị để truy cập."
+        />
+      ) : (
+        <>
+          <nav className="dashboard-nav">
+            {[
+              ["ho-so-tac-gia", "Hồ sơ tác giả"],
+              ["duyet-truyen", "Duyệt truyện"],
+              ["nguoi-dung", "Người dùng"],
+              ["bao-cao", "Báo cáo"],
+              ["giao-dich", "Giao dịch"],
+              ["nhat-ky", "Nhật ký"],
+              ["rut-tien", "Rút tiền"],
+              ["luot-mua", "Hoàn tiền"],
+              ["cau-hinh", "Cấu hình"],
+            ].map(([href, label]) => (
+              <Link key={href} href={`/admin/${href}`}>
+                {label}
+              </Link>
+            ))}
+          </nav>
+          {error && <p className="error">{error}</p>}
+          {rows.length ? (
+            <div className="data-list">
+              {rows.map((r) => (
+                <div className="data-row" key={r.id}>
+                  <div>
+                    <h3>
+                      {r.title ||
+                        r.penName ||
+                        r.name ||
+                        r.action ||
+                        r.type ||
+                        r.targetId ||
+                        r.id}
+                    </h3>
+                    <p>
+                      {r.email || r.bio || r.description || r.reason || r.id}
+                    </p>
+                    {r.sampleText && (
+                      <details>
+                        <summary>Đọc văn mẫu</summary>
+                        <p style={{ whiteSpace: "pre-wrap" }}>{r.sampleText}</p>
+                      </details>
+                    )}
+                    {r.amount !== undefined && <p>{format(r.amount)} HN</p>}
+                  </div>
+                  {section === "reports" && (
+                    <div className="row-actions">
+                      <button
+                        className="btn secondary"
+                        onClick={async () => {
+                          try {
+                            await api(`/admin/reports/${r.id}`, {
+                              method: "POST",
+                              body: JSON.stringify({ remove: false }),
+                            });
+                            void load();
+                          } catch (e) {
+                            setError((e as Error).message);
+                          }
+                        }}
+                      >
+                        Bỏ qua
+                      </button>
+                      <button
+                        className="btn primary"
+                        onClick={async () => {
+                          try {
+                            await api(`/admin/reports/${r.id}`, {
+                              method: "POST",
+                              body: JSON.stringify({ remove: true }),
+                            });
+                            void load();
+                          } catch (e) {
+                            setError((e as Error).message);
+                          }
+                        }}
+                      >
+                        Ẩn nội dung vi phạm
+                      </button>
+                    </div>
+                  )}
+                  {section === "payouts" && (
+                    <button
+                      className="btn primary"
+                      onClick={async () => {
+                        if (
+                          !window.confirm(
+                            "Chỉ xác nhận khi đã chuyển khoản thủ công thành công. Bạn đã chi trả?",
+                          )
+                        )
+                          return;
+                        try {
+                          await api(`/admin/payouts/${r.id}`, {
+                            method: "POST",
+                            body: JSON.stringify({ approve: true }),
+                          });
+                          void load();
+                        } catch (e) {
+                          setError((e as Error).message);
+                        }
+                      }}
+                    >
+                      Đã chi trả
+                    </button>
+                  )}
+                  {section === "purchases" && (
+                    <button
+                      className="btn secondary"
+                      onClick={async () => {
+                        if (
+                          !window.confirm(
+                            "Hoàn lại Hồng Ngọc cho độc giả? Quyền đọc vẫn được giữ.",
+                          )
+                        )
+                          return;
+                        try {
+                          await api(`/admin/refunds/${r.id}`, {
+                            method: "POST",
+                          });
+                          notify("Đã hoàn Hồng Ngọc.");
+                        } catch (e) {
+                          setError((e as Error).message);
+                        }
+                      }}
+                    >
+                      Hoàn {r.pricePaid} HN
+                    </button>
+                  )}
+                  {["applications", "stories"].includes(section) && (
+                    <div className="row-actions">
+                      <button
+                        className="btn primary"
+                        onClick={() => review(r.id, true)}
+                      >
+                        Duyệt
+                      </button>
+                      <button
+                        className="btn secondary"
+                        onClick={() => review(r.id, false)}
+                      >
+                        Từ chối
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty">
+              <h2>Không có mục chờ xử lý</h2>
+              <p>Các yêu cầu mới sẽ xuất hiện tại đây.</p>
+            </div>
+          )}
+        </>
+      )}
+    </main>
+  );
+}
