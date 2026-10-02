@@ -1,4 +1,4 @@
-FROM node:26.10.0-bookworm-slim AS base
+FROM node:22.16.0-bookworm-slim AS base
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN npm install -g pnpm@11.19.0
 FROM base AS build

@@ -12,14 +12,14 @@
     "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@nestjs/common": "^12.1.1",
+    "@nestjs/common": "^11.1.12",
     "@nestjs/core": "^11.1.12",
     "@nestjs/platform-express": "^11.1.12",
-    "@prisma/client": "7.10.0",
+    "@prisma/client": "6.19.2",
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
     "helmet": "^8.1.0",
-    "ioredis": "^6.0.0",
+    "ioredis": "^5.9.2",
     "jsonwebtoken": "^9.0.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
