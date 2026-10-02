@@ -1,4 +1,4 @@
-FROM node:22.16.0-bookworm-slim AS build
+FROM node:26.10.0-bookworm-slim AS build
 RUN npm install -g pnpm@11.19.0
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
@@ -8,7 +8,7 @@ RUN pnpm install --frozen-lockfile
 COPY apps/web apps/web
 ENV API_INTERNAL_URL=http://api:4000
 RUN pnpm --filter @tientruyen/web build
-FROM node:22.16.0-bookworm-slim AS runtime
+FROM node:26.10.0-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
 COPY --from=build --chown=node:node /app/apps/web/.next/standalone ./
