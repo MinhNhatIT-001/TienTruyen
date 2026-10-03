@@ -4,6 +4,7 @@
     "api": {
       "root": "apps/api",
       "framework": "nestjs",
+      "outputDirectory": "dist",
       "buildCommand": "pnpm db:generate && pnpm build"
     },
     "web": {
