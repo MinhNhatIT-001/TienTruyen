@@ -23,6 +23,8 @@ import {
   UserRound,
   ReceiptText,
   ShieldCheck,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { format, type User } from "../lib/types";
@@ -293,10 +295,16 @@ export function Footer() {
             Tiên <span className="brand-light">Truyện</span>
           </span>
         </Link>
-        <p>Một trang sách, vạn dặm nhân gian.</p>
-        <Link href="/tim-kiem">
-          Khám phá thư viện <ArrowUpRight size={16} />
-        </Link>
+        <div className="footer-about">
+          <p className="footer-tagline">Một trang sách, vạn dặm nhân gian.</p>
+          <p>Khám phá truyện yêu thích, lưu những trang đang đọc và đồng hành cùng tác giả trong từng câu chuyện.</p>
+        </div>
+        <div className="footer-support">
+          <strong>Liên hệ & hỗ trợ</strong>
+          <p>Góp ý, báo lỗi hoặc cần hỗ trợ tài khoản và giao dịch?</p>
+          <a href="mailto:tientruyenweb@gmail.com"><Mail size={16} aria-hidden="true" /> tientruyenweb@gmail.com</a>
+          <a href="tel:0123456789"><Phone size={16} aria-hidden="true" /> 0123456789</a>
+        </div>
       </div>
       <div className="footer-bottom">
         <span>
