@@ -154,7 +154,7 @@ textarea::placeholder {
 }
 .header .header-inner {
   height: 76px;
-  width: min(1280px, calc(100% - 64px));
+  width: min(1200px, calc(100% - 64px));
   gap: 28px;
   flex-wrap: nowrap;
 }
