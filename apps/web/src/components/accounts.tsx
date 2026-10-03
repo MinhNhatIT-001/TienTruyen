@@ -479,15 +479,19 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
   }, [user?.id, transactions]);
   const updateOrder = useCallback((updated: any) => {
     setOrder(updated);
-    setOrders((rows) =>
-      rows.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)),
-    );
+    setOrders((rows) => {
+      const existing = rows.find((row) => row.id === updated.id);
+      return [
+        { ...existing, ...updated },
+        ...rows.filter((row) => row.id !== updated.id),
+      ].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    });
   }, []);
   async function createOrder() {
     setBusy(true);
     setError("");
     try {
-      setOrder(
+      updateOrder(
         await api("/wallet/orders", {
           method: "POST",
           headers: { "Idempotency-Key": crypto.randomUUID() },
