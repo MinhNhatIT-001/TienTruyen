@@ -114,14 +114,30 @@ export function PaymentOrder({
       <div className="payment-status" role="status">
         {paymentStatus(order.status)}
       </div>
-      {order.status === "PENDING" && order.provider === "LOCAL" && simulate && seconds > 0 && (
-        <div className="payment-qr">
-          <QRCodeSVG value={`${typeof window !== "undefined" ? window.location.origin : ""}/nap-hong-ngoc?order=${encodeURIComponent(order.id)}`} size={220} level="M" title="QR thử nghiệm, không chuyển tiền thật" />
-          <strong>QR THANH TOÁN THỬ NGHIỆM</strong>
-          <p>Quét bằng camera điện thoại, đăng nhập cùng tài khoản rồi xác nhận thanh toán thử. Hoặc bấm nút xác nhận bên dưới để thử ngay.</p>
-        </div>
+      {order.status === "PENDING" &&
+        order.provider === "LOCAL" &&
+        simulate &&
+        seconds > 0 && (
+          <div className="payment-qr">
+            <QRCodeSVG
+              value={`${typeof window !== "undefined" ? window.location.origin : ""}/nap-hong-ngoc?order=${encodeURIComponent(order.id)}`}
+              size={220}
+              level="M"
+              title="QR thử nghiệm, không chuyển tiền thật"
+            />
+            <strong>QR THANH TOÁN THỬ NGHIỆM</strong>
+            <p>
+              Quét bằng camera điện thoại, đăng nhập cùng tài khoản rồi xác nhận
+              thanh toán thử. Hoặc bấm nút xác nhận bên dưới để thử ngay.
+            </p>
+          </div>
+        )}
+      {order.status === "PAID" && (
+        <p className="notice" role="status">
+          Thanh toán thành công · Đã cộng{" "}
+          {format(order.coinsBase + order.coinsBonus)} Hồng Ngọc vào ví.
+        </p>
       )}
-      {order.status === "PAID" && <p className="notice" role="status">Thanh toán thành công · Đã cộng {format(order.coinsBase + order.coinsBonus)} Hồng Ngọc vào ví.</p>}
       {order.status === "PENDING" &&
         order.provider === "PAYOS" &&
         order.qrCode &&
@@ -188,7 +204,8 @@ export function PaymentOrder({
           ))}
         {order.status === "PENDING" &&
           order.provider === "LOCAL" &&
-          simulate && seconds > 0 && (
+          simulate &&
+          seconds > 0 && (
             <button
               className="btn primary"
               disabled={busy}

@@ -3,7 +3,9 @@ import { HttpException } from "@nestjs/common";
 import { z } from "zod";
 const configured = (...keys: string[]) => keys.every((k) => !!process.env[k]);
 export const paymentProvider = () =>
-  (process.env.DEMO_TOPUP_ENABLED === "true" ? "local" : process.env.PAYMENT_PROVIDER) ||
+  (process.env.DEMO_TOPUP_ENABLED === "true"
+    ? "local"
+    : process.env.PAYMENT_PROVIDER) ||
   (process.env.NODE_ENV === "production" ? "payos" : "local");
 export function providerOptions() {
   return {
@@ -24,7 +26,8 @@ export function providerOptions() {
       configured("PAYOS_CLIENT_ID", "PAYOS_API_KEY", "PAYOS_CHECKSUM_KEY"),
     simulate:
       (process.env.DEMO_TOPUP_ENABLED === "true" ||
-        (process.env.NODE_ENV !== "production" && process.env.DEV_TOPUP_ENABLED === "true")) &&
+        (process.env.NODE_ENV !== "production" &&
+          process.env.DEV_TOPUP_ENABLED === "true")) &&
       paymentProvider() === "local",
   };
 }

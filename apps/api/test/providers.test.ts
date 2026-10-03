@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import {
   normalizePhone,
+  providerOptions,
   payosSignature,
   oauthUrl,
   oauthIdentity,
@@ -155,5 +156,29 @@ test("payOS accepts only signed responses and rejects altered payment data", asy
   } finally {
     globalThis.fetch = original;
     process.env = previous;
+  }
+});
+
+test("production demo credits require the explicit demo flag", () => {
+  const previous = { ...process.env };
+  try {
+    Object.assign(process.env, {
+      NODE_ENV: "production",
+      PAYMENT_PROVIDER: "payos",
+      DEV_TOPUP_ENABLED: "true",
+    });
+    delete process.env.DEMO_TOPUP_ENABLED;
+    assert.equal(providerOptions().simulate, false);
+    process.env.DEMO_TOPUP_ENABLED = "true";
+    assert.equal(providerOptions().payment, "local");
+    assert.equal(providerOptions().simulate, true);
+    assert.equal(providerOptions().paymentReady, false);
+    process.env.DEMO_TOPUP_ENABLED = "false";
+    assert.equal(providerOptions().payment, "payos");
+    assert.equal(providerOptions().simulate, false);
+  } finally {
+    for (const key of Object.keys(process.env))
+      if (!(key in previous)) delete process.env[key];
+    Object.assign(process.env, previous);
   }
 });
