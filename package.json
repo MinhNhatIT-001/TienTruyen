@@ -15,8 +15,8 @@
     "local": "node scripts/local.mjs"
   },
   "devDependencies": {
-    "typescript": "~7.0.2",
     "@types/node": "^22.19.0",
-    "prettier": "3.9.9"
+    "prettier": "3.9.9",
+    "typescript": "~5.9.3"
   }
 }
