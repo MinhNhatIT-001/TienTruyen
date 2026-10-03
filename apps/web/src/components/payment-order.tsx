@@ -118,7 +118,7 @@ export function PaymentOrder({
         <div className="payment-qr">
           <QRCodeSVG value={`${typeof window !== "undefined" ? window.location.origin : ""}/nap-hong-ngoc?order=${encodeURIComponent(order.id)}`} size={220} level="M" title="QR thử nghiệm, không chuyển tiền thật" />
           <strong>QR THANH TOÁN THỬ NGHIỆM</strong>
-          <p>Quét bằng camera, đăng nhập cùng tài khoản và bấm xác nhận nạp thử. Nếu dùng localhost, hãy xác nhận ngay bên dưới vì điện thoại không truy cập được localhost của máy tính.</p>
+          <p>Quét bằng camera điện thoại, đăng nhập cùng tài khoản rồi xác nhận thanh toán thử. Hoặc bấm nút xác nhận bên dưới để thử ngay.</p>
         </div>
       )}
       {order.status === "PAID" && <p className="notice" role="status">Thanh toán thành công · Đã cộng {format(order.coinsBase + order.coinsBonus)} Hồng Ngọc vào ví.</p>}
@@ -156,7 +156,7 @@ export function PaymentOrder({
         <p>
           {order.provider === "PAYOS"
             ? "Mở trang payOS để quét QR hoặc chuyển khoản. Ví sẽ cập nhật khi thanh toán được xác nhận."
-            : "Đơn dùng thử local; không phải thanh toán tiền thật."}
+            : "Đơn thử nghiệm — không chuyển tiền thật."}
         </p>
       )}
       {error && (

@@ -1512,3 +1512,19 @@ footer .footer-bottom {
     padding: 28px 24px;
   }
 }
+
+.payment-qr {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: min(100%, 360px);
+  padding: 24px;
+  margin: 24px 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  text-align: center;
+}
+.payment-qr svg { max-width: 100%; height: auto; }
+.payment-qr strong { font-size: 12px; letter-spacing: .06em; color: #28523e; }
+.payment-qr p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--muted-foreground); }
