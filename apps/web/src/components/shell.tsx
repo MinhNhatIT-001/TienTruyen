@@ -21,6 +21,8 @@ import {
   LogOut,
   Feather,
   UserRound,
+  ReceiptText,
+  ShieldCheck,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { format, type User } from "../lib/types";
@@ -199,7 +201,9 @@ export function Header() {
                         <Diamond size={16} /> Ví Hồng Ngọc ·{" "}
                         {format(user.balance)}
                       </Link>
-                      <Link href="/lich-su-giao-dich">Lịch sử giao dịch</Link>
+                      <Link href="/lich-su-giao-dich">
+                        <ReceiptText size={16} aria-hidden="true" /> Lịch sử giao dịch
+                      </Link>
                       <Link href="/tu-truyen">
                         <BookOpen size={16} /> Tủ truyện
                       </Link>
@@ -209,7 +213,9 @@ export function Header() {
                         </Link>
                       ) : null}
                       {user.roles.includes("ADMIN") && (
-                        <Link href="/admin">Quản trị</Link>
+                        <Link href="/admin">
+                          <ShieldCheck size={16} aria-hidden="true" /> Quản trị
+                        </Link>
                       )}
                       <button
                         onClick={async () => {
