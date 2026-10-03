@@ -287,25 +287,33 @@ export function Header() {
 }
 export function Footer() {
   return (
-    <footer>
+    <footer className="literary-footer">
+      <svg className="footer-cloud footer-cloud-left" viewBox="0 0 240 120" fill="none" aria-hidden="true"><path d="M3 90c26-20 52-8 73-20-24 2-40-14-29-29 11-16 35-6 29 7-5 11-20 5-15-3M76 70c-4-36 29-58 52-39 18 15 5 38-10 29-13-8 1-22 9-12M111 24c17-26 53-18 56 7 4 27-28 29-29 12M157 66c39-31 49 10 77-3M18 103c40-19 73 7 107-10 40-19 76-6 109-17M87 85c14-7 29-5 37-11" /></svg>
+      <svg className="footer-cloud footer-cloud-right" viewBox="0 0 240 120" fill="none" aria-hidden="true"><path d="M3 90c26-20 52-8 73-20-24 2-40-14-29-29 11-16 35-6 29 7-5 11-20 5-15-3M76 70c-4-36 29-58 52-39 18 15 5 38-10 29-13-8 1-22 9-12M111 24c17-26 53-18 56 7 4 27-28 29-29 12M157 66c39-31 49 10 77-3M18 103c40-19 73 7 107-10 40-19 76-6 109-17" /></svg>
       <div className="footer-top">
         <div className="footer-about">
           <Link className="brand" href="/">
             <span className="seal">仙</span>
             <span>Tiên <span className="brand-light">Truyện</span></span>
           </Link>
-          <p className="footer-tagline">Một trang sách, vạn dặm nhân gian.</p>
-          <p>Góc nhỏ dành cho người yêu truyện — khám phá thế giới mới và tiếp nối những câu chuyện còn dang dở.</p>
+          <p className="footer-tagline">Dẫn lối vạn dặm, mở cõi huyền thoại.</p>
+          <p>Đắm mình trong thế giới tiên hiệp, kiếm hiệp và những câu chuyện bạn yêu thích.</p>
         </div>
         <nav className="footer-explore" aria-label="Khám phá Tiên Truyện">
           <h2>Khám phá</h2>
           <Link href="/the-loai/tat-ca">Thư viện truyện</Link>
           <Link href="/bang-xep-hang">Bảng xếp hạng</Link>
-          <Link href="/tu-truyen">Tủ truyện của bạn</Link>
+          <Link href="/tim-kiem">Tìm truyện mới</Link>
+        </nav>
+        <nav className="footer-explore footer-connect" aria-label="Góc của bạn">
+          <h2>Góc của bạn</h2>
+          <Link href="/tu-truyen">Tủ truyện cá nhân</Link>
+          <Link href="/lich-su">Tiếp tục đọc</Link>
+          <Link href="/tai-khoan">Tài khoản & cài đặt</Link>
         </nav>
         <div className="footer-support">
-          <h2>Luôn sẵn lòng lắng nghe</h2>
-          <p>Cần hỗ trợ hay có điều muốn góp ý?<br />Liên hệ với Tiên Truyện.</p>
+          <h2>Hỗ trợ & góp ý</h2>
+          <p>Chúng tôi luôn lắng nghe bạn.</p>
           <a className="footer-contact" href="mailto:tientruyenweb@gmail.com">
             <Mail size={17} aria-hidden="true" />
             <span>tientruyenweb@gmail.com</span>
