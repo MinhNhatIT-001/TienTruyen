@@ -923,52 +923,83 @@ footer {
   font-family: var(--sans);
   font-style: normal;
 }
+footer {
+  margin-top: 40px;
+  padding: 0 0 24px;
+  border-top: 0;
+}
 footer .footer-top {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) minmax(240px, 320px);
+  grid-template-columns: minmax(0, 1.3fr) minmax(160px, .65fr) minmax(0, 1fr);
   align-items: start;
-  gap: 36px;
-  padding-block: 36px;
+  gap: 64px;
+  padding: 36px 40px;
+  background: #f0f3ee;
+  border: 1px solid #e0e6dd;
+  border-radius: 16px;
 }
+.footer-about .brand { width: fit-content; margin-bottom: 16px; }
 .footer-about p,
 .footer-support p {
   margin: 0;
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--muted-foreground);
 }
+.footer-about > p:last-child { max-width: 340px; }
 .footer-about .footer-tagline {
   margin-bottom: 8px;
   color: var(--foreground);
-  font-weight: 600;
-}
-.footer-support strong {
-  display: block;
-  margin-bottom: 8px;
   font-size: 14px;
 }
+.footer-top h2 {
+  margin: 3px 0 16px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--foreground);
+}
+.footer-explore { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.footer-explore h2 { margin-bottom: 4px; }
+.footer-explore a { font-size: 13px; color: var(--muted-foreground); }
 .footer-support a {
   display: flex;
   width: fit-content;
   align-items: center;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 10px;
   font-size: 13px;
-  overflow-wrap: anywhere;
 }
-@media (max-width: 900px) {
-  footer .footer-top {
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
-  .footer-top > .brand { grid-column: 1 / -1; }
+.footer-support .footer-contact {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border: 1px solid #d5ded2;
+  border-radius: 8px;
+  background: #fafbf8;
+  color: #28523e;
 }
-@media (max-width: 680px) {
-  footer .footer-top { grid-template-columns: 1fr; gap: 20px; }
-}
-.footer-bottom {
+.footer-contact span { overflow-wrap: anywhere; }
+.footer-contact svg { flex-shrink: 0; }
+.footer-support .footer-phone { margin-top: 12px; color: var(--muted-foreground); }
+.footer-top a:hover { color: #28523e; }
+.footer-top a:focus-visible { outline: 2px solid #28523e; outline-offset: 4px; }
+footer .footer-bottom {
+  margin-top: 0;
+  padding-top: 18px;
+  border-top: 0;
   font-size: 12px;
   color: var(--muted-foreground);
+}
+@media (max-width: 1100px) {
+  footer .footer-top { gap: 32px; padding: 28px; }
+}
+@media (max-width: 900px) {
+  footer .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .footer-about { grid-column: 1 / -1; }
+  .footer-about > p:last-child { max-width: 480px; }
+}
+@media (max-width: 680px) {
+  footer .footer-top { grid-template-columns: 1fr; gap: 28px; padding: 24px; }
+  footer .footer-bottom { gap: 8px; line-height: 1.6; }
 }
 @media (max-width: 1100px) {
   .header .header-inner {

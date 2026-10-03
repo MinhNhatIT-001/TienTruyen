@@ -289,21 +289,29 @@ export function Footer() {
   return (
     <footer>
       <div className="footer-top">
-        <Link className="brand" href="/">
-          <span className="seal">仙</span>
-          <span>
-            Tiên <span className="brand-light">Truyện</span>
-          </span>
-        </Link>
         <div className="footer-about">
+          <Link className="brand" href="/">
+            <span className="seal">仙</span>
+            <span>Tiên <span className="brand-light">Truyện</span></span>
+          </Link>
           <p className="footer-tagline">Một trang sách, vạn dặm nhân gian.</p>
-          <p>Khám phá truyện yêu thích, lưu những trang đang đọc và đồng hành cùng tác giả trong từng câu chuyện.</p>
+          <p>Góc nhỏ dành cho người yêu truyện — khám phá thế giới mới và tiếp nối những câu chuyện còn dang dở.</p>
         </div>
+        <nav className="footer-explore" aria-label="Khám phá Tiên Truyện">
+          <h2>Khám phá</h2>
+          <Link href="/the-loai/tat-ca">Thư viện truyện</Link>
+          <Link href="/bang-xep-hang">Bảng xếp hạng</Link>
+          <Link href="/tu-truyen">Tủ truyện của bạn</Link>
+        </nav>
         <div className="footer-support">
-          <strong>Liên hệ & hỗ trợ</strong>
-          <p>Góp ý, báo lỗi hoặc cần hỗ trợ tài khoản và giao dịch?</p>
-          <a href="mailto:tientruyenweb@gmail.com"><Mail size={16} aria-hidden="true" /> tientruyenweb@gmail.com</a>
-          <a href="tel:0123456789"><Phone size={16} aria-hidden="true" /> 0123456789</a>
+          <h2>Luôn sẵn lòng lắng nghe</h2>
+          <p>Cần hỗ trợ hay có điều muốn góp ý?<br />Liên hệ với Tiên Truyện.</p>
+          <a className="footer-contact" href="mailto:tientruyenweb@gmail.com">
+            <Mail size={17} aria-hidden="true" />
+            <span>tientruyenweb@gmail.com</span>
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </a>
+          <a className="footer-phone" href="tel:0123456789"><Phone size={14} aria-hidden="true" /> 0123456789</a>
         </div>
       </div>
       <div className="footer-bottom">
