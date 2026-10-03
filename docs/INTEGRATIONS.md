@@ -61,3 +61,12 @@ Migration `202610030001_payment_recovery` thêm QR, thông tin đơn cần kiể
 - Giữ bỏ 2FA và vị trí nút Google/Facebook dưới nút đăng nhập theo yêu cầu của chủ project. Không tự gộp ví theo email Google.
 
 Kiểm tra bản bổ sung: TypeScript API/web và kiểm thử chính sách/adapter. Chưa thay thế kiểm thử PostgreSQL, migration và luồng OAuth/thanh toán thật; các bước này cần Docker và khóa nhà cung cấp.
+
+
+## Kiểm thử thanh toán độc lập
+
+Chạy `pnpm test:payments` khi Docker đang mở. Lệnh tạo PostgreSQL riêng trên cổng ngẫu nhiên, áp dụng migration, chạy API với payOS giả lập có chữ ký và kiểm tra ví/sổ cái. Container và dữ liệu thử được dọn khi kết thúc; database đang dùng không bị thay đổi. Cổng API thử 4106 phải trống. Không dùng khóa thật cho bộ test này.
+
+Kiểm thử bao gồm tạo lại đơn cùng idempotency key, webhook giả, webhook lặp đồng thời với polling, thiếu tiền, hủy, hết hạn, tiền đến muộn và khôi phục liên kết thanh toán. Trên Vercel, tác vụ sổ cái hằng ngày cũng đối soát tối đa 30 đơn để dự phòng mất webhook; webhook và polling là nguồn cập nhật chính. Với lưu lượng lớn cần scheduler thường xuyên hơn.
+
+Thanh toán thật vẫn cần kênh payOS liên kết ngân hàng, ba khóa PAYOS_CLIENT_ID/PAYOS_API_KEY/PAYOS_CHECKSUM_KEY và webhook `https://tientruyen.vercel.app/api/payments/payos/webhook`. Test giả lập không xác nhận kết nối ngân hàng thật.

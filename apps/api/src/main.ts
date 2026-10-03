@@ -1042,7 +1042,11 @@ class ApiController {
       return { status: "skipped", job };
     if (job === "publish") await publishScheduledDrafts();
     if (job === "payments") await reconcilePayments(this);
-    if (job === "ledger") await ledgerCheck();
+    if (job === "ledger") {
+      // Hobby cron also reconciles missed payment callbacks once per day.
+      await reconcilePayments(this);
+      await ledgerCheck();
+    }
     return { status: "completed", job };
   }
   @Get("health") async health() {

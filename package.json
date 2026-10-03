@@ -12,7 +12,8 @@
     "db:seed": "pnpm --filter @tientruyen/api db:seed",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "local": "node scripts/local.mjs"
+    "local": "node scripts/local.mjs",
+    "test:payments": "node scripts/test-payments.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",
