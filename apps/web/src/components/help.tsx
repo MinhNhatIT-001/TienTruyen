@@ -114,11 +114,6 @@ export function HelpPage({ section }: { section: string }) {
               ],
               [
                 Feather,
-                Search,
-                ChevronDown,
-                MessageCircle,
-                LifeBuoy,
-                X,
                 "Không gian sáng tác",
                 "Viết nháp, xem trước, quản lý chương và theo dõi độc giả.",
               ],
