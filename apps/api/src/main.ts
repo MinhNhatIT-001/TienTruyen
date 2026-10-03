@@ -1742,7 +1742,7 @@ class ApiController {
       fail("Cấu hình thanh toán không hợp lệ.", 503);
     if (mode === "payos" && !providerOptions().paymentReady)
       fail("Thanh toán chưa được kích hoạt.", 503);
-    if (mode === "local" && (production || !providerOptions().simulate))
+    if (mode === "local" && !providerOptions().simulate)
       fail("Thanh toán chưa được kích hoạt.", 503);
     const order = await serial(async (tx) => {
       const previous = await tx.topupOrder.findUnique({
@@ -2015,9 +2015,7 @@ class ApiController {
     @Param("id") id: string,
   ) {
     if (
-      production ||
-      process.env.DEV_TOPUP_ENABLED !== "true" ||
-      paymentProvider() !== "local"
+      !providerOptions().simulate || paymentProvider() !== "local"
     )
       fail("Nạp giả lập đang tắt.", 403);
     const a = auth(req);
