@@ -55,11 +55,12 @@ switch (action) {
     ]);
     break;
   case "web":
-    run([next, "dev", "--hostname", "127.0.0.1"], resolve(root, "apps/web"));
+    run([next, "dev", "--hostname", "127.0.0.1", "--port", "3000"], resolve(root, "apps/web"));
     break;
   case "dev":
+    env.TSX_TSCONFIG_PATH = resolve(root, "apps/api/tsconfig.json");
     run(["--import", tsx, "--watch", "apps/api/src/main.ts"]);
-    run([next, "dev", "--hostname", "127.0.0.1"], resolve(root, "apps/web"));
+    run([next, "dev", "--hostname", "127.0.0.1", "--port", "3000"], resolve(root, "apps/web"));
     break;
   default:
     throw new Error("Unknown action: " + action);

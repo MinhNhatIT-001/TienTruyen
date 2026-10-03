@@ -560,6 +560,7 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
         )
       ) : (
         <>
+          {paymentOptions?.simulate && <p className="notice">Chế độ thử nghiệm · Không chuyển tiền thật.</p>}
           <div className="packages">
             {packages.map((p, i) => (
               <button
@@ -597,7 +598,7 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
             >
               {busy
                 ? "Đang tạo đơn…"
-                : `Tạo đơn ${format(packages[selected].amount)}đ`}
+                : "Thanh toán"}
               <ArrowRight size={17} />
             </button>
           ) : (
