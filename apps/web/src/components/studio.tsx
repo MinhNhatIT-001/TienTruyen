@@ -75,6 +75,12 @@ export function Studio({ path }: { path: string[] }) {
                 Truyện đang quản lý<strong>{rows.length}</strong>
               </div>
               <div>
+                Độc giả đã đọc
+                <strong>
+                  {format(rows.reduce((n, s) => n + (s.readers || 0), 0))}
+                </strong>
+              </div>
+              <div>
                 Lượt mua chương
                 <strong>
                   {format(rows.reduce((n, s) => n + (s.sales || 0), 0))}
@@ -361,14 +367,54 @@ export function Admin({ path }: { path: string[] }) {
       } as Record<string, string>
     )[path[1]] || "applications";
   const [rows, setRows] = useState<any[]>([]),
+    [summary, setSummary] = useState<Record<string, number> | null>(null),
+    [query, setQuery] = useState(""),
+    [loading, setLoading] = useState(false),
     [error, setError] = useState("");
   const load = () =>
     api<any[]>(`/admin/${section}`)
       .then(setRows)
       .catch((e) => setError(e.message));
   useEffect(() => {
-    if (user?.roles.includes("ADMIN")) void load();
-  }, [user, section]);
+    let active = true;
+    setRows([]);
+    setError("");
+    setQuery("");
+    if (user?.roles.includes("ADMIN")) {
+      setLoading(true);
+      api<any[]>(`/admin/${section}`)
+        .then((data) => {
+          if (active) setRows(data);
+        })
+        .catch((e) => {
+          if (active) setError(e.message);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+      api<Record<string, number>>("/admin/summary")
+        .then((data) => {
+          if (active) setSummary(data);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      active = false;
+    };
+  }, [user?.id, section]);
+  const filteredRows = rows.filter((row) =>
+    JSON.stringify([
+      row.title,
+      row.penName,
+      row.name,
+      row.email,
+      row.id,
+      row.action,
+      row.type,
+    ])
+      .toLocaleLowerCase("vi")
+      .includes(query.toLocaleLowerCase("vi")),
+  );
   async function review(id: string, approve: boolean) {
     const reason = approve ? undefined : window.prompt("Lý do từ chối:");
     if (!approve && !reason) return;
@@ -402,6 +448,21 @@ export function Admin({ path }: { path: string[] }) {
         />
       ) : (
         <>
+          {summary && (
+            <div className="admin-overview">
+              {[
+                ["applications", "Hồ sơ chờ duyệt", "ho-so-tac-gia"],
+                ["stories", "Truyện chờ duyệt", "duyet-truyen"],
+                ["reports", "Báo cáo nội dung", "bao-cao"],
+                ["topups", "Đơn cần đối soát", "don-nap"],
+              ].map(([key, label, href]) => (
+                <Link key={key} className="panel" href={`/admin/${href}`}>
+                  <span>{label}</span>
+                  <strong>{summary[key]}</strong>
+                </Link>
+              ))}
+            </div>
+          )}
           <nav className="dashboard-nav">
             {[
               ["ho-so-tac-gia", "Hồ sơ tác giả"],
@@ -415,15 +476,35 @@ export function Admin({ path }: { path: string[] }) {
               ["don-nap", "Đơn nạp cần kiểm tra"],
               ["cau-hinh", "Cấu hình"],
             ].map(([href, label]) => (
-              <Link key={href} href={`/admin/${href}`}>
+              <Link
+                key={href}
+                className={
+                  path[1] === href || (!path[1] && href === "ho-so-tac-gia")
+                    ? "active"
+                    : ""
+                }
+                aria-current={path[1] === href ? "page" : undefined}
+                href={`/admin/${href}`}
+              >
                 {label}
               </Link>
             ))}
           </nav>
           {error && <p className="error">{error}</p>}
-          {rows.length ? (
+          <label className="library-search field">
+            Tìm trong danh sách
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tên, email hoặc mã…"
+            />
+          </label>
+          {loading ? (
+            <p role="status">Đang tải danh sách…</p>
+          ) : filteredRows.length ? (
             <div className="data-list">
-              {rows.map((r) => (
+              {filteredRows.map((r) => (
                 <div className="data-row" key={r.id}>
                   <div>
                     <h3>

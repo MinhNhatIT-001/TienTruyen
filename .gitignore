@@ -15,3 +15,7 @@ uploads/
 
 # Generated Vercel API bundle
 apps/api/serverless/
+
+# Private encrypted snapshots and QA browser evidence
+backups/
+*.ttbackup

@@ -13,7 +13,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "local": "node scripts/local.mjs",
-    "test:payments": "node scripts/test-payments.mjs"
+    "test:payments": "node scripts/test-payments.mjs",
+    "backup": "node scripts/backup.mjs",
+    "test:vercel": "node scripts/check-vercel.mjs",
+    "test:backup": "node --test scripts/backup-crypto.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

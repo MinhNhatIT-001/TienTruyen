@@ -9,6 +9,10 @@ import {
 } from "../../components/reader";
 import { RoutePage } from "../../components/routes";
 const routes = new Set([
+  "gioi-thieu",
+  "ho-tro",
+  "dieu-khoan",
+  "chinh-sach-bao-mat",
   "truyen",
   "thong-bao",
   "chuong-da-mua",
@@ -87,10 +91,25 @@ export async function generateMetadata({
   const { path } = await params;
   if (path[0] !== "truyen" || !path[1])
     return {
+      title: (
+        {
+          "gioi-thieu": "Giới thiệu",
+          "ho-tro": "Hỗ trợ",
+          "dieu-khoan": "Điều khoản sử dụng",
+          "chinh-sach-bao-mat": "Chính sách bảo mật",
+        } as Record<string, string>
+      )[path[0]],
       robots: {
-        index: ["tim-kiem", "the-loai", "bang-xep-hang", "cap-bac"].includes(
-          path[0],
-        ),
+        index: [
+          "tim-kiem",
+          "the-loai",
+          "bang-xep-hang",
+          "cap-bac",
+          "gioi-thieu",
+          "ho-tro",
+          "dieu-khoan",
+          "chinh-sach-bao-mat",
+        ].includes(path[0]),
         follow: true,
       },
     };

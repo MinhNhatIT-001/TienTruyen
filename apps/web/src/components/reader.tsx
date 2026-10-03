@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Select } from "./ui/select";
 import {
   StoryReadingActions,
   BatchUnlock,
@@ -414,16 +416,17 @@ export function SettingsPanel({
         </button>
       </div>
       <label htmlFor="reader-font">Kiểu chữ</label>
-      <select
-        id="reader-font"
+      <Select
+        label="Kiểu chữ"
         value={s.font}
-        onChange={(e) => update({ font: e.target.value })}
-      >
-        <option value="serif">Serif · Trang sách</option>
-        <option value="sans">Sans · Hiện đại</option>
-        <option value="lexend">Lexend · Dễ đọc</option>
-        <option value="mono">Mono · Máy chữ</option>
-      </select>
+        onValueChange={(font) => update({ font })}
+        options={[
+          { value: "serif", label: "Serif · Trang sách" },
+          { value: "sans", label: "Sans · Hiện đại" },
+          { value: "lexend", label: "Lexend · Dễ đọc" },
+          { value: "mono", label: "Mono · Máy chữ" },
+        ]}
+      />
       <label>
         Giãn dòng <strong>{s.lineHeight.toFixed(1)}</strong>
       </label>
@@ -437,16 +440,17 @@ export function SettingsPanel({
         onChange={(e) => update({ lineHeight: +e.target.value })}
       />
       <label htmlFor="reader-width">Độ rộng trang</label>
-      <select
-        id="reader-width"
+      <Select
+        label="Độ rộng trang"
         value={s.width}
-        onChange={(e) => update({ width: e.target.value })}
-      >
-        <option value="narrow">Hẹp</option>
-        <option value="medium">Vừa</option>
-        <option value="wide">Rộng</option>
-        <option value="full">Toàn màn hình</option>
-      </select>
+        onValueChange={(width) => update({ width })}
+        options={[
+          { value: "narrow", label: "Hẹp" },
+          { value: "medium", label: "Vừa" },
+          { value: "wide", label: "Rộng" },
+          { value: "full", label: "Toàn màn hình" },
+        ]}
+      />
       <label>Màu trang sách</label>
       <div className="theme-grid">
         {Object.entries(themes).map(([key, t]) => (
@@ -554,6 +558,8 @@ export function Reader({
   initialChapter?: Chapter;
 }) {
   const { settings, setSettings, loaded, sync } = useReaderSettings();
+  const router = useRouter();
+  const [progress, setProgress] = useState(0);
   const [panel, setPanel] = useState(false),
     [positionReady, setPositionReady] = useState(false),
     [chapter, setChapter] = useState<Chapter | null>(initialChapter || null),
@@ -574,31 +580,21 @@ export function Reader({
     setPositionReady(false);
     setChapter(initialChapter || null);
     setDemo(false);
-    load().catch((e) => {
-      if (e instanceof ApiError && e.status < 500) {
-        setError(e.message);
-        return;
-      }
-      setPositionReady(true);
-      setDemo(true);
-      if (!Number.isInteger(number) || number < 1 || number > 12) {
-        setError("Không tìm thấy chương.");
-        return;
-      }
-      setChapter({
-        id: "sample",
-        number,
-        title: "Sương sớm Thanh Vân",
-        previousNumber: number > 1 ? number - 1 : null,
-        nextNumber: number < 12 ? number + 1 : null,
-        isFree: number <= 5,
-        price: 20,
-        content:
-          number <= 5
-            ? "Sương sớm còn vương trên những tán trúc. Từ phía xa, tiếng chuông chùa ngân dài qua thung lũng, đánh thức một miền núi rừng đang say giấc. Lâm An đứng trước hiên nhà, lặng nhìn con đường đất nhỏ dẫn xuống chân núi.\n\nHôm nay là ngày chàng rời Thanh Vân. Suốt mười tám năm, ngọn núi này là cả thế giới của chàng: tiếng suối sau nhà, mùi thảo dược trong gian bếp, bàn tay chai sần của sư phụ đặt lên vai mỗi buổi chiều.\n\n“Đường xa không đáng sợ,” sư phụ nói, trao cho chàng chiếc túi vải đã cũ. “Điều đáng sợ là con quên mất vì sao mình lên đường.” Lâm An cúi đầu, cất lời dặn ấy vào lòng như cất một hạt giống.\n\nMây trắng lững lờ trôi qua đỉnh núi. Chàng bước đi, nghe tiếng lá xào xạc dưới chân và cảm thấy mỗi bước đều mang theo một điều chưa biết. Phía trước là nhân gian rộng lớn, là những cuộc gặp gỡ chưa có tên.\n\nỞ khúc quanh cuối cùng, chàng ngoái đầu nhìn lại. Mái nhà nhỏ đã khuất trong làn sương, chỉ còn cây tùng già vươn lên nền trời sáng. Một cánh chim bay qua, để lại khoảng trời thênh thang và yên tĩnh."
-            : undefined,
+    let active = true;
+    api<Chapter>(`/stories/${slug}/chapters/${number}`)
+      .then((c) => {
+        if (active) {
+          setChapter(c);
+          setPositionReady(true);
+          setError("");
+        }
+      })
+      .catch((e) => {
+        if (active) setError(e.message || "Không mở được chương. Hãy thử lại.");
       });
-    });
+    return () => {
+      active = false;
+    };
   }, [slug, number]);
   useReadingPosition(
     slug,
@@ -608,6 +604,82 @@ export function Reader({
     demo,
     chapter?.progressUpdatedAt,
   );
+  useEffect(() => {
+    if (!chapter?.content) {
+      setProgress(0);
+      return;
+    }
+    let frame = 0;
+    const update = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const article = document.querySelector(".reader-prose");
+        if (!article) return;
+        const rect = article.getBoundingClientRect();
+        const distance = Math.max(
+          1,
+          article.scrollHeight - window.innerHeight * 0.65,
+        );
+        setProgress(
+          rect.bottom <= window.innerHeight * 0.9
+            ? 100
+            : Math.round(Math.max(0, Math.min(1, -rect.top / distance)) * 100),
+        );
+      });
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [chapter?.content, settings]);
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPanel(false);
+        setConfirm(false);
+      }
+      if (
+        !event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        panel ||
+        confirm
+      )
+        return;
+      const target = event.target as HTMLElement;
+      if (
+        target?.closest(
+          "input, textarea, select, [contenteditable], [role=dialog]",
+        )
+      )
+        return;
+      const next =
+        event.key === "ArrowRight"
+          ? chapter?.nextNumber
+          : event.key === "ArrowLeft"
+            ? chapter?.previousNumber
+            : null;
+      if (next) {
+        event.preventDefault();
+        router.push(`/truyen/${slug}/${next}`);
+      }
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, [
+    chapter?.nextNumber,
+    chapter?.previousNumber,
+    slug,
+    router,
+    panel,
+    confirm,
+  ]);
   async function buy() {
     if (!chapter || busy) return;
     setBusy(true);
@@ -681,6 +753,12 @@ export function Reader({
           {story?.title} · CHƯƠNG {number}
         </span>
         <h1>{chapter?.title || "Đang mở trang sách…"}</h1>
+        <p className="reader-meta">
+          {chapter?.content
+            ? `${Math.max(1, Math.ceil(chapter.content.trim().split(/\s+/u).length / 220))} phút đọc · `
+            : ""}
+          Chương {number}
+        </p>
         <div className="reader-ornament">— ✦ —</div>
         {demo && (
           <p className="demo-note">
@@ -688,7 +766,15 @@ export function Reader({
           </p>
         )}
         {error ? (
-          <p role="alert">{error}</p>
+          <div role="alert">
+            <p>{error}</p>
+            <button
+              className="btn secondary"
+              onClick={() => void load().catch((e) => setError(e.message))}
+            >
+              Thử mở lại chương
+            </button>
+          </div>
         ) : chapter?.content ? (
           <div className="reader-prose">
             {chapter.content.split("\n\n").map((p, i) => (
@@ -733,7 +819,7 @@ export function Reader({
           </div>
         ) : null}
         <div className="reader-end">✦</div>
-        <nav className="chapter-nav">
+        <nav className="chapter-nav" aria-label="Chuyển chương">
           {chapter?.previousNumber ? (
             <Link
               className="btn secondary"
@@ -761,6 +847,40 @@ export function Reader({
           )}
         </nav>
       </article>
+      {chapter && (
+        <nav className="reader-dock" aria-label="Điều khiển đọc nhanh">
+          {chapter.previousNumber ? (
+            <Link
+              href={`/truyen/${slug}/${chapter.previousNumber}`}
+              aria-label="Chương trước"
+            >
+              <ArrowLeft size={18} />
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span className="reader-progress-label">
+            Chương {number} · {progress}%
+          </span>
+          <button
+            aria-label="Tùy chỉnh trang đọc"
+            aria-expanded={panel}
+            onClick={() => setPanel(!panel)}
+          >
+            <Settings2 size={18} />
+          </button>
+          {chapter.nextNumber ? (
+            <Link
+              href={`/truyen/${slug}/${chapter.nextNumber}`}
+              aria-label="Chương sau"
+            >
+              <ArrowRight size={18} />
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )}
       {confirm && (
         <div className="modal-backdrop" onClick={() => setConfirm(false)}>
           <section

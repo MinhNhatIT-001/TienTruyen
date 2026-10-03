@@ -18,6 +18,8 @@ import {
   EyeOff,
 } from "lucide-react";
 import { api } from "../lib/api";
+import { normalizeSearch } from "../lib/search";
+import { Select } from "./ui/select";
 import { format } from "../lib/types";
 import { useApp, Empty } from "./shell";
 import { StoryCard } from "./catalog";
@@ -245,6 +247,8 @@ export function Library({ history = false }: { history?: boolean }) {
   const [rows, setRows] = useState<any[]>([]),
     [error, setError] = useState(""),
     [filter, setFilter] = useState("ALL"),
+    [query, setQuery] = useState(""),
+    [reading, setReading] = useState<any[]>([]),
     [busy, setBusy] = useState<string | null>(null);
   const load = () =>
     api<any[]>(history ? "/history" : "/library")
@@ -253,12 +257,22 @@ export function Library({ history = false }: { history?: boolean }) {
   useEffect(() => {
     setRows([]);
     setError("");
-    if (user) void load();
+    setReading([]);
+    if (user) {
+      void load();
+      if (!history)
+        api<any[]>("/history")
+          .then(setReading)
+          .catch(() => {});
+    }
   }, [user?.id, history]);
   const filtered = rows.filter(
     (r) =>
-      filter === "ALL" ||
-      (filter === "FOLLOWED" ? r.followed : r.shelf === filter),
+      (filter === "ALL" ||
+        (filter === "FOLLOWED" ? r.followed : r.shelf === filter)) &&
+      normalizeSearch(
+        `${r.story?.title || ""} ${r.story?.penName || ""}`,
+      ).includes(normalizeSearch(query.trim())),
   );
   async function update(id: string, data: any) {
     setBusy(id);
@@ -292,6 +306,17 @@ export function Library({ history = false }: { history?: boolean }) {
         <Link href="/chuong-da-mua">Chương đã mua</Link>
         <Link href="/thong-bao">Thông báo</Link>
       </nav>
+      {user && (
+        <label className="library-search field">
+          Tìm trong {history ? "lịch sử đọc" : "tủ truyện"}
+          <Input
+            type="search"
+            placeholder="Tên truyện hoặc tác giả…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+      )}
       {!history && user && (
         <div className="genre-tabs shelf-tabs">
           {[
@@ -326,7 +351,13 @@ export function Library({ history = false }: { history?: boolean }) {
       ) : history ? (
         <div className="data-list">
           {rows
-            .filter((r) => r.story)
+            .filter(
+              (r) =>
+                r.story &&
+                normalizeSearch(`${r.story.title} ${r.story.penName}`).includes(
+                  normalizeSearch(query.trim()),
+                ),
+            )
             .map((r) => (
               <Link
                 className="data-row"
@@ -369,20 +400,28 @@ export function Library({ history = false }: { history?: boolean }) {
                 }}
               />
               <div className="shelf-controls">
+                <Link
+                  className="btn primary"
+                  href={`/truyen/${r.story.slug}/${reading.find((x) => x.storyId === r.storyId)?.chapter || 1}`}
+                >
+                  <BookOpen size={16} />{" "}
+                  {reading.some((x) => x.storyId === r.storyId)
+                    ? "Tiếp tục đọc"
+                    : "Bắt đầu đọc"}
+                </Link>
                 <label>
                   Ngăn tủ
-                  <select
-                    aria-label={`Ngăn tủ của ${r.story.title}`}
+                  <Select
+                    label={`Ngăn tủ của ${r.story.title}`}
                     value={r.shelf}
                     disabled={busy === r.storyId}
-                    onChange={(e) =>
-                      void update(r.storyId, { shelf: e.target.value })
-                    }
-                  >
-                    <option value="READING">Đang đọc</option>
-                    <option value="FAVORITE">Yêu thích</option>
-                    <option value="FINISHED">Đã hoàn thành</option>
-                  </select>
+                    onValueChange={(shelf) => void update(r.storyId, { shelf })}
+                    options={[
+                      { value: "READING", label: "Đang đọc" },
+                      { value: "FAVORITE", label: "Yêu thích" },
+                      { value: "FINISHED", label: "Đã hoàn thành" },
+                    ]}
+                  />
                 </label>
                 <button
                   className="text-button"
@@ -437,6 +476,7 @@ const fallbackPackages = [
 export function Wallet({ transactions = false }: { transactions?: boolean }) {
   const { user, refresh } = useApp();
   const paymentOptions = useAuthOptions();
+  const [transactionType, setTransactionType] = useState("ALL");
   const [orders, setOrders] = useState<any[]>([]);
   const [packages, setPackages] = useState(fallbackPackages),
     [selected, setSelected] = useState(1),
@@ -473,8 +513,20 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
       .catch((e) => {
         if (active) setError(e.message);
       });
+    const reloadOrders = () => {
+      if (document.hidden) return;
+      api<any[]>("/wallet/orders")
+        .then((rows) => {
+          if (active) setOrders(rows);
+        })
+        .catch(() => {});
+    };
+    const timer = setInterval(reloadOrders, 15000);
+    window.addEventListener("focus", reloadOrders);
     return () => {
       active = false;
+      clearInterval(timer);
+      window.removeEventListener("focus", reloadOrders);
     };
   }, [user?.id, transactions]);
   const updateOrder = useCallback((updated: any) => {
@@ -533,27 +585,61 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
       {error && <p className="error">{error}</p>}
       {transactions ? (
         rows.length ? (
-          <div className="data-list">
-            {rows.map((r) => (
-              <div className="data-row" key={r.id}>
-                <div>
-                  <h3>
-                    {{
-                      TOPUP: "Nạp Hồng Ngọc",
-                      PURCHASE: "Mở khóa chương",
-                      REFUND: "Hoàn tiền",
-                    }[r.type as string] || r.type}
-                  </h3>
-                  <p>{new Date(r.createdAt).toLocaleString("vi-VN")}</p>
-                </div>
-                <strong className={r.amount > 0 ? "free" : "ruby"}>
-                  {r.amount > 0 ? "+" : ""}
-                  {format(r.amount)} HN
-                </strong>
-                <small>Số dư: {format(r.balanceAfter)} HN</small>
-              </div>
-            ))}
-          </div>
+          <>
+            <label className="library-search field">
+              Loại giao dịch
+              <Select
+                label="Loại giao dịch"
+                value={transactionType}
+                onValueChange={setTransactionType}
+                options={[
+                  { value: "ALL", label: "Tất cả" },
+                  { value: "TOPUP", label: "Nạp Hồng Ngọc" },
+                  { value: "BONUS", label: "Hồng Ngọc thưởng" },
+                  { value: "PURCHASE", label: "Mở khóa chương" },
+                  { value: "REFUND", label: "Hoàn tiền" },
+                ]}
+              />
+            </label>
+            <div className="data-list">
+              {rows
+                .filter(
+                  (r) =>
+                    transactionType === "ALL" || r.type === transactionType,
+                )
+                .map((r) => (
+                  <div className="data-row" key={r.id}>
+                    <div>
+                      <h3>
+                        {{
+                          TOPUP: "Nạp Hồng Ngọc",
+                          BONUS: "Hồng Ngọc thưởng",
+                          PURCHASE: "Mở khóa chương",
+                          REFUND: "Hoàn tiền",
+                        }[r.type as string] || r.type}
+                      </h3>
+                      <p>{new Date(r.createdAt).toLocaleString("vi-VN")}</p>
+                      {r.type === "TOPUP" && (
+                        <Link
+                          className="more-link"
+                          href={`/nap-hong-ngoc?order=${encodeURIComponent(r.refId)}`}
+                        >
+                          Xem đơn nạp <ArrowRight size={14} />
+                        </Link>
+                      )}
+                    </div>
+                    <strong className={r.amount > 0 ? "free" : "ruby"}>
+                      {r.amount > 0 ? "+" : ""}
+                      {format(r.amount)} HN
+                    </strong>
+                    <small>Số dư: {format(r.balanceAfter)} HN</small>
+                  </div>
+                ))}
+            </div>
+            {!rows.some(
+              (r) => transactionType === "ALL" || r.type === transactionType,
+            ) && <p className="notice">Chưa có giao dịch thuộc loại này.</p>}
+          </>
         ) : (
           <Empty
             title="Chưa có giao dịch"
@@ -631,7 +717,9 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
             <section className="topup-orders">
               <div className="topup-orders-heading">
                 <h2>Đơn nạp gần đây</h2>
-                <Link className="more-link" href="/lich-su-giao-dich">Xem lịch sử <ArrowRight size={16} /></Link>
+                <Link className="more-link" href="/lich-su-giao-dich">
+                  Xem lịch sử <ArrowRight size={16} />
+                </Link>
               </div>
               <div className="data-list">
                 {orders.slice(0, 5).map((o) => (

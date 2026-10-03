@@ -560,6 +560,7 @@ export function useReadingPosition(
       if (user && !demo)
         void api(`/reading/${slug}/${number}`, {
           method: "PUT",
+          keepalive: true,
           body: JSON.stringify({ position: latest, finished: latest >= 0.98 }),
         }).catch(() => {});
     };
@@ -609,12 +610,14 @@ export function useReadingPosition(
       if (document.hidden) save();
     };
     document.addEventListener("visibilitychange", hide);
+    window.addEventListener("pagehide", save);
     return () => {
       disposed = true;
       save();
       clearInterval(timer);
       window.removeEventListener("scroll", scroll);
       document.removeEventListener("visibilitychange", hide);
+      window.removeEventListener("pagehide", save);
     };
   }, [slug, number, content, user?.id, demo, serverPosition, serverUpdatedAt]);
 }

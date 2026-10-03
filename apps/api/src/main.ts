@@ -1043,7 +1043,8 @@ class ApiController {
     if (job === "publish") await publishScheduledDrafts();
     if (job === "payments") await reconcilePayments(this);
     if (job === "ledger") {
-      // Hobby cron also reconciles missed payment callbacks once per day.
+      // Hobby's daily job publishes due drafts and reconciles missed callbacks.
+      await publishScheduledDrafts();
       await reconcilePayments(this);
       await ledgerCheck();
     }
@@ -1891,8 +1892,19 @@ class ApiController {
     });
   }
   @Get("wallet/orders") async myOrders(@Req() req: AuthRequest) {
+    const userId = auth(req).id;
+    // Only simulated orders can expire locally; real payments need provider reconciliation.
+    await db.topupOrder.updateMany({
+      where: {
+        userId,
+        provider: "LOCAL",
+        status: "PENDING",
+        expiresAt: { lt: new Date() },
+      },
+      data: { status: "EXPIRED" },
+    });
     return db.topupOrder.findMany({
-      where: { userId: auth(req).id },
+      where: { userId },
       orderBy: { createdAt: "desc" },
       take: 20,
     });
@@ -2014,9 +2026,7 @@ class ApiController {
     @Req() req: AuthRequest,
     @Param("id") id: string,
   ) {
-    if (
-      !providerOptions().simulate || paymentProvider() !== "local"
-    )
+    if (!providerOptions().simulate || paymentProvider() !== "local")
       fail("Nạp giả lập đang tắt.", 403);
     const a = auth(req);
     const order = await db.topupOrder.findFirst({
@@ -2746,6 +2756,34 @@ class ApiController {
   ) {
     auth(req, "ADMIN");
     switch (section) {
+      case "summary": {
+        const [
+          users,
+          stories,
+          applications,
+          reports,
+          topups,
+          payouts,
+          scheduled,
+        ] = await Promise.all([
+          db.user.count(),
+          db.story.count({ where: { status: "PENDING" } }),
+          db.authorApplication.count({ where: { status: "PENDING" } }),
+          db.report.count({ where: { status: "PENDING" } }),
+          db.topupOrder.count({ where: { status: "NEEDS_REVIEW" } }),
+          db.payoutRequest.count({ where: { status: "PENDING" } }),
+          db.chapterDraft.count({ where: { status: "SCHEDULED" } }),
+        ]);
+        return {
+          users,
+          stories,
+          applications,
+          reports,
+          topups,
+          payouts,
+          scheduled,
+        };
+      }
       case "topups":
         return db.topupOrder.findMany({
           where: { status: "NEEDS_REVIEW" },

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Select } from "./ui/select";
 import { ReadingHome } from "./reading-tools";
 import { useEffect, useState } from "react";
+import { normalizeSearch } from "../lib/search";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -312,17 +313,75 @@ export function CatalogPage({
     [sort, setSort] = useState(ranking ? "rating" : "new"),
     [length, setLength] = useState("all"),
     [updated, setUpdated] = useState("all");
+  const [filtersReady, setFiltersReady] = useState("");
+  const [page, setPage] = useState(1);
+  const filterKey = `tt-catalog:${ranking ? "ranking" : initialGenre}`;
   useEffect(() => {
-    setGenre(initialGenre);
-  }, [initialGenre]);
-  useEffect(() => {
-    setSort(ranking ? "rating" : "new");
-  }, [ranking]);
-  useEffect(() => {
-    setQuery(
-      new URLSearchParams(window.location.search).get("q")?.slice(0, 100) || "",
+    let params = new URLSearchParams(window.location.search);
+    if (
+      !["q", "genre", "status", "sort", "length", "updated"].some((key) =>
+        params.has(key),
+      )
+    ) {
+      try {
+        params = new URLSearchParams(localStorage.getItem(filterKey) || "");
+      } catch {}
+    }
+    setQuery((params.get("q") || "").slice(0, 100));
+    setGenre(
+      genres.includes(params.get("genre") || "")
+        ? params.get("genre")!
+        : initialGenre,
     );
-  }, []);
+    setStatus(
+      ["Tất cả", "Đang ra", "Hoàn thành"].includes(params.get("status") || "")
+        ? params.get("status")!
+        : "Tất cả",
+    );
+    setSort(
+      ["new", "rating", "length"].includes(params.get("sort") || "")
+        ? params.get("sort")!
+        : ranking
+          ? "rating"
+          : "new",
+    );
+    setLength(
+      ["all", "short", "medium", "long"].includes(params.get("length") || "")
+        ? params.get("length")!
+        : "all",
+    );
+    setUpdated(
+      ["all", "1", "7", "30"].includes(params.get("updated") || "")
+        ? params.get("updated")!
+        : "all",
+    );
+    setPage(1);
+    setFiltersReady(filterKey);
+  }, [filterKey, initialGenre, ranking]);
+  useEffect(() => {
+    if (filtersReady !== filterKey) return;
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams({
+        genre,
+        status,
+        sort,
+        length,
+        updated,
+      });
+      if (query.trim()) params.set("q", query.trim());
+      try {
+        localStorage.setItem(filterKey, params.toString());
+      } catch {}
+      window.history.replaceState(
+        window.history.state,
+        "",
+        `${window.location.pathname}?${params}${window.location.hash}`,
+      );
+    }, 300);
+    setPage(1);
+    return () => clearTimeout(timer);
+  }, [query, genre, status, sort, length, updated, filtersReady, filterKey]);
+
   let filtered = stories.filter(
     (s) =>
       (genre === "Tất cả" || s.genre === genre) &&
@@ -337,9 +396,9 @@ export function CatalogPage({
         (!!s.updatedAt &&
           Date.now() - Date.parse(s.updatedAt) <=
             Number(updated) * 86400000)) &&
-      `${s.title} ${s.penName}`
-        .toLocaleLowerCase("vi")
-        .includes(query.toLocaleLowerCase("vi")),
+      normalizeSearch(`${s.title} ${s.penName}`).includes(
+        normalizeSearch(query.trim()),
+      ),
   );
   if (sort === "rating")
     filtered = [...filtered].sort((a, b) => b.rating - a.rating);
@@ -478,7 +537,7 @@ export function CatalogPage({
       </div>
       {filtered.length ? (
         <div className="catalog-grid">
-          {filtered.map((s) => (
+          {filtered.slice((page - 1) * 12, page * 12).map((s) => (
             <StoryCard story={s} key={s.id} />
           ))}
         </div>
@@ -501,6 +560,27 @@ export function CatalogPage({
             Xóa bộ lọc
           </button>
         </div>
+      )}
+      {filtered.length > 12 && (
+        <nav className="pagination" aria-label="Phân trang thư viện">
+          <button
+            className="btn secondary"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Trang trước
+          </button>
+          <span aria-live="polite">
+            Trang {page} / {Math.ceil(filtered.length / 12)}
+          </span>
+          <button
+            className="btn secondary"
+            disabled={page >= Math.ceil(filtered.length / 12)}
+            onClick={() => setPage(page + 1)}
+          >
+            Trang sau
+          </button>
+        </nav>
       )}
     </main>
   );

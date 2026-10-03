@@ -22,14 +22,16 @@ export function DraftEditor({
   storyId: string;
   onPublished: () => void;
 }) {
-  const { notify } = useApp();
+  const { notify, user } = useApp();
   const [rows, setRows] = useState<Draft[]>([]),
     [draft, setDraft] = useState<Draft | null>(null),
     [error, setError] = useState(""),
     [saving, setSaving] = useState(false),
     [busy, setBusy] = useState(false),
     [preview, setPreview] = useState(false),
-    [schedule, setSchedule] = useState("");
+    [schedule, setSchedule] = useState(""),
+    [recovery, setRecovery] = useState<Partial<Draft> | null>(null);
+  const recoveryKey = (id: string) => `tt-draft-recovery:${user?.id}:${id}`;
   const current = useRef<Draft | null>(null),
     dirty = useRef(false),
     version = useRef(0),
@@ -52,6 +54,20 @@ export function DraftEditor({
     setError("");
     setSchedule("");
     setPreview(false);
+    setRecovery(null);
+    if (value) {
+      try {
+        const local = JSON.parse(
+          localStorage.getItem(recoveryKey(value.id)) || "null",
+        );
+        if (
+          local &&
+          local.savedAt > Date.parse(value.updatedAt) &&
+          (local.title !== value.title || local.content !== value.content)
+        )
+          setRecovery(local);
+      } catch {}
+    }
   }
   function change(values: Partial<Draft>) {
     if (!current.current) return;
@@ -59,6 +75,18 @@ export function DraftEditor({
     current.current = next;
     version.current++;
     dirty.current = true;
+    try {
+      localStorage.setItem(
+        recoveryKey(next.id),
+        JSON.stringify({
+          title: next.title,
+          content: next.content,
+          isFree: next.isFree,
+          price: next.price,
+          savedAt: Date.now(),
+        }),
+      );
+    } catch {}
     setDraft(next);
   }
   async function persist(
@@ -101,6 +129,11 @@ export function DraftEditor({
           current.current = next;
           setDraft(next);
           dirty.current = version.current !== savedVersion;
+          if (!dirty.current) {
+            try {
+              localStorage.removeItem(recoveryKey(saved.id));
+            } catch {}
+          }
           setRows((r) => r.map((x) => (x.id === saved.id ? saved : x)));
           setError("");
         }
@@ -217,12 +250,45 @@ export function DraftEditor({
             </div>
             {draft.scheduledAt && (
               <p className="notice">
-                Đăng lúc {new Date(draft.scheduledAt).toLocaleString("vi-VN")}.
-                Chỉnh nội dung sẽ tự chuyển về nháp và bỏ lịch cũ.
+                Đủ điều kiện đăng từ{" "}
+                {new Date(draft.scheduledAt).toLocaleString("vi-VN")}. Vercel
+                Hobby xử lý lịch một lần mỗi ngày, có thể trễ tới 24 giờ. Chỉnh
+                nội dung sẽ tự chuyển về nháp và bỏ lịch cũ.
               </p>
             )}
             {draft.error && (
               <p className="error">Không đăng được chương: {draft.error}</p>
+            )}
+            {recovery && (
+              <div className="notice draft-recovery" role="status">
+                <p>Có nội dung chưa lưu từ phiên trước trên trình duyệt này.</p>
+                <button
+                  className="btn secondary"
+                  disabled={busy || saving}
+                  onClick={() => {
+                    change({
+                      title: String(recovery.title || ""),
+                      content: String(recovery.content || ""),
+                      isFree: recovery.isFree ?? draft.isFree,
+                      price: recovery.price ?? draft.price,
+                    });
+                    setRecovery(null);
+                  }}
+                >
+                  Khôi phục nội dung
+                </button>
+                <button
+                  className="text-button"
+                  onClick={() => {
+                    try {
+                      localStorage.removeItem(recoveryKey(draft.id));
+                    } catch {}
+                    setRecovery(null);
+                  }}
+                >
+                  Giữ bản trên tài khoản
+                </button>
+              </div>
             )}
             <label className="field">
               Tên chương
@@ -333,7 +399,7 @@ export function DraftEditor({
             </p>
             <div className="draft-publish">
               <label className="field">
-                Hẹn ngày giờ đăng (giờ trên máy bạn)
+                Đăng từ ngày giờ (giờ trên máy bạn)
                 <input
                   type="datetime-local"
                   value={schedule}
@@ -423,8 +489,10 @@ export function DraftEditor({
               khoản, có thể tiếp tục từ thiết bị khác.
             </p>
             <p>
-              Lịch đăng được xử lý khi API đang chạy. Nếu API tắt, các chương
-              đến hạn sẽ được xử lý sau khi khởi động lại.
+              Trên Vercel Hobby, lịch đăng được xử lý trong lượt chạy hằng ngày
+              khoảng 09:00–10:00 (giờ Việt Nam). Chương đến hạn sau lượt chạy sẽ
+              đăng trong lượt kế tiếp. Dùng “Xuất bản ngay” nếu cần đăng chính
+              xác lúc này.
             </p>
           </div>
         )}

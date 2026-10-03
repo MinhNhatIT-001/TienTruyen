@@ -1,5 +1,6 @@
 "use client";
-import {NotificationsPage,PurchasesPage} from "./reading-tools";
+import { NotificationsPage, PurchasesPage } from "./reading-tools";
+import { HelpPage } from "./help";
 import { CatalogPage } from "./catalog";
 import { StoryPage, Reader, ReaderPreferences } from "./reader";
 import {
@@ -16,8 +17,12 @@ import { ProfilePage } from "./profile";
 import { Empty } from "./shell";
 export function RoutePage({ path }: { path: string[] }) {
   const first = path[0];
-  if(first === "thong-bao")return <NotificationsPage/>;
-  if(first === "chuong-da-mua")return <PurchasesPage/>;
+  if (
+    ["gioi-thieu", "ho-tro", "dieu-khoan", "chinh-sach-bao-mat"].includes(first)
+  )
+    return <HelpPage section={first} />;
+  if (first === "thong-bao") return <NotificationsPage />;
+  if (first === "chuong-da-mua") return <PurchasesPage />;
   if (first === "tai-khoan") return <ProfilePage />;
   if (first === "bao-mat") return <SecurityPage />;
   if (["xac-minh", "quen-mat-khau", "dat-lai-mat-khau"].includes(first))

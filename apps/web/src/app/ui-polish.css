@@ -662,3 +662,265 @@ button {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
+
+/* Comfortable reading, compact tools and responsive service pages. */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0 0;
+}
+.library-search {
+  max-width: 440px;
+  margin: 24px 0;
+}
+.reader-meta {
+  font-family: var(--font-sans, Arial), sans-serif;
+  font-size: 13px;
+  opacity: 0.7;
+}
+.reader-dock {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  border-color: color-mix(in srgb, var(--reader-color) 15%, transparent);
+  border-radius: 999px;
+  background: var(--reader-bg);
+  color: var(--reader-color);
+  box-shadow: 0 6px 24px #00000012;
+}
+.reader-dock a,
+.reader-dock button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+.reader-dock a:hover,
+.reader-dock button:hover {
+  background: color-mix(in srgb, var(--reader-color) 8%, transparent);
+}
+.reader-progress-label {
+  white-space: nowrap;
+  font:
+    500 12px Arial,
+    sans-serif;
+}
+.reader {
+  padding-bottom: 100px;
+}
+.reader-settings {
+  z-index: 45;
+  max-height: calc(100dvh - 130px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.reader-toc {
+  max-height: 70dvh;
+  overscroll-behavior: contain;
+  z-index: 45;
+}
+.reader .ui-select-trigger {
+  color: var(--reader-color);
+  background: var(--reader-bg);
+}
+.admin-overview,
+.help-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.admin-overview .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+}
+.admin-overview strong {
+  font-size: 30px;
+  color: #28523e;
+}
+.studio-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.help-page {
+  max-width: 1100px;
+}
+.help-page .page-intro h1 {
+  max-width: 780px;
+}
+.help-story {
+  max-width: 760px;
+  padding: 36px;
+  margin-bottom: 24px;
+}
+.help-story > svg,
+.help-feature-grid svg,
+.help-contact > svg {
+  color: #28523e;
+}
+.help-story h2 {
+  font:
+    700 30px Georgia,
+    serif;
+  margin: 20px 0;
+}
+.help-story p,
+.policy-content p {
+  line-height: 1.9;
+}
+.help-feature-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.help-feature-grid h2 {
+  font-size: 19px;
+  margin-top: 20px;
+}
+.help-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.help-faq details {
+  border-top: 1px solid var(--border);
+  padding: 18px 0;
+}
+.help-faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.help-faq details p {
+  margin: 12px 0 0;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+}
+.help-contact {
+  position: sticky;
+  top: 100px;
+}
+.help-email {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.help-contact small {
+  display: block;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+}
+.policy-content {
+  max-width: 820px;
+  padding: 36px;
+}
+.policy-content h2 {
+  font-size: 20px;
+  margin: 32px 0 12px;
+}
+.policy-content a {
+  color: #28523e;
+  text-decoration: underline;
+}
+.policy-date {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.footer-policy-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.footer-help-link {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.draft-recovery p {
+  margin-top: 0;
+}
+@media (max-width: 700px) {
+  .help-layout,
+  .help-feature-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .admin-overview .panel {
+    padding: 16px;
+  }
+  .help-contact {
+    position: static;
+  }
+  .help-story,
+  .policy-content {
+    padding: 24px;
+  }
+  .reader-dock {
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .reader-settings {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    top: 80px;
+    max-height: calc(100dvh - 180px);
+  }
+  .reader-toc {
+    left: 0;
+    right: 0;
+    width: min(100%, 400px);
+  }
+  .dashboard-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+  }
+  .dashboard-nav a {
+    flex: 0 0 auto;
+  }
+  .data-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .data-row > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .row-actions,
+  .payment-actions {
+    flex-wrap: wrap;
+  }
+  .row-actions .btn {
+    white-space: normal;
+  }
+  .catalog-extra-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

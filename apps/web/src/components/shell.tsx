@@ -4,6 +4,7 @@ import { NotificationBell } from "./reading-tools";
 import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -45,7 +46,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null),
     [ready, setReady] = useState(false),
     [message, setMessage] = useState("");
-  async function refresh() {
+  const refresh = useCallback(async () => {
     try {
       setUser(await api("/auth/me"));
     } catch {
@@ -53,7 +54,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setReady(true);
     }
-  }
+  }, []);
   useEffect(() => {
     void refresh();
   }, []);
@@ -204,7 +205,8 @@ export function Header() {
                         {format(user.balance)}
                       </Link>
                       <Link href="/lich-su-giao-dich">
-                        <ReceiptText size={16} aria-hidden="true" /> Lịch sử giao dịch
+                        <ReceiptText size={16} aria-hidden="true" /> Lịch sử
+                        giao dịch
                       </Link>
                       <Link href="/tu-truyen">
                         <BookOpen size={16} /> Tủ truyện
@@ -288,22 +290,42 @@ export function Header() {
 export function Footer() {
   return (
     <footer className="literary-footer">
-      <svg className="footer-cloud footer-cloud-left" viewBox="0 0 240 120" fill="none" aria-hidden="true"><path d="M3 90c26-20 52-8 73-20-24 2-40-14-29-29 11-16 35-6 29 7-5 11-20 5-15-3M76 70c-4-36 29-58 52-39 18 15 5 38-10 29-13-8 1-22 9-12M111 24c17-26 53-18 56 7 4 27-28 29-29 12M157 66c39-31 49 10 77-3M18 103c40-19 73 7 107-10 40-19 76-6 109-17M87 85c14-7 29-5 37-11" /></svg>
-      <svg className="footer-cloud footer-cloud-right" viewBox="0 0 240 120" fill="none" aria-hidden="true"><path d="M3 90c26-20 52-8 73-20-24 2-40-14-29-29 11-16 35-6 29 7-5 11-20 5-15-3M76 70c-4-36 29-58 52-39 18 15 5 38-10 29-13-8 1-22 9-12M111 24c17-26 53-18 56 7 4 27-28 29-29 12M157 66c39-31 49 10 77-3M18 103c40-19 73 7 107-10 40-19 76-6 109-17" /></svg>
+      <svg
+        className="footer-cloud footer-cloud-left"
+        viewBox="0 0 240 120"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d="M3 90c26-20 52-8 73-20-24 2-40-14-29-29 11-16 35-6 29 7-5 11-20 5-15-3M76 70c-4-36 29-58 52-39 18 15 5 38-10 29-13-8 1-22 9-12M111 24c17-26 53-18 56 7 4 27-28 29-29 12M157 66c39-31 49 10 77-3M18 103c40-19 73 7 107-10 40-19 76-6 109-17M87 85c14-7 29-5 37-11" />
+      </svg>
+      <svg
+        className="footer-cloud footer-cloud-right"
+        viewBox="0 0 240 120"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d="M3 90c26-20 52-8 73-20-24 2-40-14-29-29 11-16 35-6 29 7-5 11-20 5-15-3M76 70c-4-36 29-58 52-39 18 15 5 38-10 29-13-8 1-22 9-12M111 24c17-26 53-18 56 7 4 27-28 29-29 12M157 66c39-31 49 10 77-3M18 103c40-19 73 7 107-10 40-19 76-6 109-17" />
+      </svg>
       <div className="footer-top">
         <div className="footer-about">
           <Link className="brand" href="/">
             <span className="seal">仙</span>
-            <span>Tiên <span className="brand-light">Truyện</span></span>
+            <span>
+              Tiên <span className="brand-light">Truyện</span>
+            </span>
           </Link>
           <p className="footer-tagline">Dẫn lối vạn dặm, mở cõi huyền thoại.</p>
-          <p>Đắm mình trong thế giới tiên hiệp, kiếm hiệp và những câu chuyện bạn yêu thích.</p>
+          <p>
+            Đắm mình trong thế giới tiên hiệp, kiếm hiệp và những câu chuyện bạn
+            yêu thích.
+          </p>
         </div>
         <nav className="footer-explore" aria-label="Khám phá Tiên Truyện">
           <h2>Khám phá</h2>
           <Link href="/the-loai/tat-ca">Thư viện truyện</Link>
           <Link href="/bang-xep-hang">Bảng xếp hạng</Link>
           <Link href="/tim-kiem">Tìm truyện mới</Link>
+          <Link href="/gioi-thieu">Về Tiên Truyện</Link>
         </nav>
         <nav className="footer-explore footer-connect" aria-label="Góc của bạn">
           <h2>Góc của bạn</h2>
@@ -314,19 +336,27 @@ export function Footer() {
         <div className="footer-support">
           <h2>Hỗ trợ & góp ý</h2>
           <p>Chúng tôi luôn lắng nghe bạn.</p>
+          <Link className="footer-help-link" href="/ho-tro">
+            Hướng dẫn & câu hỏi thường gặp →
+          </Link>
           <a className="footer-contact" href="mailto:tientruyenweb@gmail.com">
             <Mail size={17} aria-hidden="true" />
             <span>tientruyenweb@gmail.com</span>
             <ArrowUpRight size={15} aria-hidden="true" />
           </a>
-          <a className="footer-phone" href="tel:0123456789"><Phone size={14} aria-hidden="true" /> 0123456789</a>
+          <a className="footer-phone" href="tel:0123456789">
+            <Phone size={14} aria-hidden="true" /> 0123456789
+          </a>
         </div>
       </div>
       <div className="footer-bottom">
         <span>
           © {new Date().getFullYear()} Tiên Truyện. Nơi câu chuyện bắt đầu.
         </span>
-        <span>Tôn trọng sáng tạo · Trân trọng từng con chữ</span>
+        <nav className="footer-policy-links" aria-label="Chính sách">
+          <Link href="/dieu-khoan">Điều khoản</Link>
+          <Link href="/chinh-sach-bao-mat">Bảo mật</Link>
+        </nav>
       </div>
     </footer>
   );
