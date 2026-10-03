@@ -4,7 +4,7 @@
     "api": {
       "root": "apps/api",
       "framework": "nestjs",
-      "entrypoint": "apps/api/index.js",
+      "entrypoint": "index.js",
       "buildCommand": "pnpm db:generate && pnpm build"
     },
     "web": {
