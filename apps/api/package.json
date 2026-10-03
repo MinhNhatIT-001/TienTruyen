@@ -15,7 +15,7 @@
     "@nestjs/common": "^11.1.12",
     "@nestjs/core": "^11.1.12",
     "@nestjs/platform-express": "^11.1.12",
-    "@prisma/client": "6.19.2",
+    "@prisma/client": "6.19.3",
     "@vercel/blob": "^2.8.0",
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
@@ -33,7 +33,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^7.0.9",
-    "prisma": "6.19.2",
+    "prisma": "6.19.3",
     "tsx": "^4.21.0"
   }
 }
