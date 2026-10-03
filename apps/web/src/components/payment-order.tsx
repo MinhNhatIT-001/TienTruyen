@@ -100,13 +100,12 @@ export function PaymentOrder({
   }
   return (
     <section
-      className="panel"
-      style={{ marginTop: 25 }}
+      className="panel payment-order"
       aria-label="Đơn nạp Hồng Ngọc"
     >
       <h2>Đơn nạp Hồng Ngọc</h2>
-      <p>Mã đơn: {order.id}</p>
-      <p>
+      <p className="payment-order-id">Mã đơn: {order.id}</p>
+      <p className="payment-order-total">
         Nhận <strong>{format(order.coinsBase + order.coinsBonus)} HN</strong> ·{" "}
         {format(order.amountVnd)}đ
       </p>

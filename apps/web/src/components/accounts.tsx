@@ -629,9 +629,12 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
           )}
           {orders.length > 0 && (
             <section className="topup-orders">
-              <h2>Đơn nạp gần đây</h2>
+              <div className="topup-orders-heading">
+                <h2>Đơn nạp gần đây</h2>
+                <Link className="more-link" href="/lich-su-giao-dich">Xem lịch sử <ArrowRight size={16} /></Link>
+              </div>
               <div className="data-list">
-                {orders.map((o) => (
+                {orders.slice(0, 5).map((o) => (
                   <button
                     type="button"
                     className="data-row"

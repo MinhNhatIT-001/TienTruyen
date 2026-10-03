@@ -1528,3 +1528,32 @@ footer .footer-bottom {
 .payment-qr svg { max-width: 100%; height: auto; }
 .payment-qr strong { font-size: 12px; letter-spacing: .06em; color: #28523e; }
 .payment-qr p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--muted-foreground); }
+
+/* Focused checkout: keep the QR, receipt and actions on one centered axis. */
+.panel.payment-order {
+  max-width: 620px;
+  margin: 32px auto;
+  padding: 32px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 12px 36px rgba(31, 68, 53, .05);
+}
+.payment-order h2 { margin: 0 0 12px; font-size: 24px; }
+.payment-order .payment-order-id { font-size: 12px; overflow-wrap: anywhere; color: var(--muted-foreground); }
+.payment-order .payment-order-total { margin: 20px 0 10px; font-size: 17px; }
+.payment-order-total strong { color: #bb4265; font-size: 24px; }
+.payment-order .payment-status { width: fit-content; margin: 20px auto; padding: 8px 18px; border-radius: 999px; font-size: 13px; }
+.payment-order .payment-qr { margin: 0 auto 20px; padding: 24px; background: #fafcf9; border-radius: 20px; }
+.payment-order .payment-countdown { font-variant-numeric: tabular-nums; color: #28523e; }
+.payment-order .payment-actions { justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.payment-order .notice { margin: 20px 0 0; }
+.topup-orders-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.topup-orders-heading h2 { margin: 0; }
+.topup-orders-heading .more-link { white-space: nowrap; font-size: 13px; }
+@media (max-width: 600px) {
+  .panel.payment-order { padding: 24px 18px; border-radius: 20px; }
+  .payment-order .payment-actions .btn { flex: 1 1 auto; }
+  .topup-orders-heading h2 { font-size: 20px; }
+}
