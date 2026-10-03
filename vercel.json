@@ -5,7 +5,8 @@
       "root": "apps/api",
       "framework": "nestjs",
       "entrypoint": "index.js",
-      "buildCommand": "pnpm db:generate && pnpm build"
+      "buildCommand": "pnpm build:vercel",
+      "outputDirectory": "serverless"
     },
     "web": {
       "root": "apps/web",
@@ -20,9 +21,24 @@
       ]
     }
   },
-  "crons": [{ "path": "/api/jobs/ledger", "schedule": "0 2 * * *" }],
+  "crons": [
+    {
+      "path": "/api/jobs/ledger",
+      "schedule": "0 2 * * *"
+    }
+  ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "api" } },
-    { "source": "/(.*)", "destination": { "service": "web" } }
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
   ]
 }

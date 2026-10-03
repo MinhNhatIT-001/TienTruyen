@@ -82,6 +82,9 @@ importers:
       '@types/nodemailer':
         specifier: ^7.0.9
         version: 7.0.12
+      '@vercel/ncc':
+        specifier: ^0.38.4
+        version: 0.38.4
       prisma:
         specifier: 6.19.3
         version: 6.19.3(typescript@5.9.3)
@@ -925,6 +928,10 @@ packages:
   '@vercel/cli-exec@1.0.1':
     resolution: {integrity: sha512-g9XerViJ/paZujufXYcu5XYI2vU2rtB4sgdpjUHde5RnOkdmpu0ngH46LCFGHoPXO/C+qDPSczIHIRN+8Q2YKQ==}
     engines: {node: '>= 18'}
+
+  '@vercel/ncc@0.38.4':
+    resolution: {integrity: sha512-8LwjnlP39s08C08J5NstzriPvW1SP8Zfpp1BvC2sI35kPeZnHfxVkCwu4/+Wodgnd60UtT1n8K8zw+Mp7J9JmQ==}
+    hasBin: true
 
   '@vercel/oidc@3.8.9':
     resolution: {integrity: sha512-TcbdH3YtGS2KU98T99dN4sbf+E4vbJZsJTRN97wKQ7QWQ0BR7U02QX3KN4+5GHxBtKTj1c5CnvTTitc2ZRad0A==}
@@ -2409,6 +2416,8 @@ snapshots:
   '@vercel/cli-exec@1.0.1':
     dependencies:
       execa: 5.1.1
+
+  '@vercel/ncc@0.38.4': {}
 
   '@vercel/oidc@3.8.9':
     dependencies:

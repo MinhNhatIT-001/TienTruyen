@@ -9,7 +9,8 @@
     "test": "tsx --test test/*.test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "build:vercel": "pnpm db:generate && pnpm build && node scripts/build-vercel.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.12",
@@ -33,6 +34,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^7.0.9",
+    "@vercel/ncc": "^0.38.4",
     "prisma": "6.19.3",
     "tsx": "^4.21.0"
   }

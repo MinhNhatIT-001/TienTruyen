@@ -12,3 +12,6 @@ coverage/
 docs/local-accounts.md
 
 uploads/
+
+# Generated Vercel API bundle
+apps/api/serverless/
