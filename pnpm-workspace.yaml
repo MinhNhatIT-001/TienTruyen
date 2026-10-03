@@ -1,6 +1,8 @@
 packages:
   - apps/*
   - packages/*
+# Keep dependency targets inside the checkout so serverless tracing includes them.
+enableGlobalVirtualStore: false
 allowBuilds:
   "@prisma/client": true
   "@prisma/engines": true
