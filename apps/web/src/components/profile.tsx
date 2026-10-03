@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { LinkedLoginSettings } from "./auth-methods";
 import { AvatarSettings } from "./avatar-settings";
 import { ArrowRight, Diamond, Feather, ShieldCheck } from "lucide-react";
 import { useApp, Empty } from "./shell";
@@ -33,9 +34,18 @@ export function ProfilePage() {
         <section className="profile-card">
           <AvatarSettings />
           <h2>{user.name}</h2>
-          <p>{user.email}</p>
           <p>
-            {user.emailVerified ? "Email đã xác minh" : "Email chưa xác minh"} ·{" "}
+            {user.email.endsWith("@accounts.invalid")
+              ? "Tài khoản đăng nhập qua SMS hoặc mạng xã hội"
+              : user.email}
+          </p>
+          <p>
+            {user.email.endsWith("@accounts.invalid")
+              ? "Chưa liên kết email"
+              : user.emailVerified
+                ? "Email đã xác minh"
+                : "Email chưa xác minh"}{" "}
+            ·{" "}
             {user.roles.includes("ADMIN")
               ? "Quản trị viên"
               : author
@@ -49,6 +59,12 @@ export function ProfilePage() {
             <Link href="/lich-su">
               Lịch sử đọc <ArrowRight size={16} />
             </Link>
+            <Link href="/thong-bao">
+              Thông báo <ArrowRight size={16} />
+            </Link>
+            <Link href="/chuong-da-mua">
+              Chương đã mua <ArrowRight size={16} />
+            </Link>
             <Link href="/cap-bac">
               Cảnh giới của tôi <ArrowRight size={16} />
             </Link>
@@ -57,7 +73,7 @@ export function ProfilePage() {
             </Link>
             <Link href="/bao-mat">
               <span>
-                <ShieldCheck size={14} /> Bảo mật và 2FA
+                <ShieldCheck size={14} /> Bảo mật tài khoản
               </span>
               <ArrowRight size={16} />
             </Link>
@@ -99,6 +115,7 @@ export function ProfilePage() {
               <ArrowRight size={16} />
             </Link>
           </section>
+          <LinkedLoginSettings />
         </div>
       </div>
     </main>

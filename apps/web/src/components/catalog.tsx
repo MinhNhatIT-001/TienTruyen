@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { Select } from "./ui/select";
+import { ReadingHome } from "./reading-tools";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -10,7 +12,6 @@ import {
   Star,
   TrendingUp,
   Search,
-  SlidersHorizontal,
   ChevronRight,
   Sparkles,
   CheckCircle2,
@@ -97,13 +98,13 @@ export function Home() {
     <main className="home library-home container">
       {demo && (
         <div className="demo-note">
-          Đang xem thư viện mẫu · Kết nối API để sử dụng tài khoản và giao dịch.
+          Đang xem dữ liệu mẫu. Một số chức năng chưa khả dụng.
         </div>
       )}
       <div className="home-intro">
         <div>
-          <span className="eyebrow">THƯ VIỆN CỦA NHỮNG THẾ GIỚI</span>
-          <h1>Tìm câu chuyện dành cho bạn.</h1>
+          <span className="eyebrow">KHÁM PHÁ TRUYỆN</span>
+          <h1>Hôm nay bạn muốn đọc gì?</h1>
         </div>
         <form action="/tim-kiem" className="home-search">
           <Search size={19} />
@@ -188,6 +189,7 @@ export function Home() {
           </Link>
         </aside>
       </section>
+      <ReadingHome stories={stories} />
       <section className="home-shelf">
         <div className="section-heading">
           <div>
@@ -307,7 +309,15 @@ export function CatalogPage({
   const [query, setQuery] = useState(""),
     [genre, setGenre] = useState(initialGenre),
     [status, setStatus] = useState("Tất cả"),
-    [sort, setSort] = useState(ranking ? "rating" : "new");
+    [sort, setSort] = useState(ranking ? "rating" : "new"),
+    [length, setLength] = useState("all"),
+    [updated, setUpdated] = useState("all");
+  useEffect(() => {
+    setGenre(initialGenre);
+  }, [initialGenre]);
+  useEffect(() => {
+    setSort(ranking ? "rating" : "new");
+  }, [ranking]);
   useEffect(() => {
     setQuery(
       new URLSearchParams(window.location.search).get("q")?.slice(0, 100) || "",
@@ -317,68 +327,155 @@ export function CatalogPage({
     (s) =>
       (genre === "Tất cả" || s.genre === genre) &&
       (status === "Tất cả" || s.progress === status) &&
+      (length === "all" ||
+        (length === "short"
+          ? s.chapterCount < 50
+          : length === "medium"
+            ? s.chapterCount >= 50 && s.chapterCount <= 200
+            : s.chapterCount > 200)) &&
+      (updated === "all" ||
+        (!!s.updatedAt &&
+          Date.now() - Date.parse(s.updatedAt) <=
+            Number(updated) * 86400000)) &&
       `${s.title} ${s.penName}`
         .toLocaleLowerCase("vi")
         .includes(query.toLocaleLowerCase("vi")),
   );
   if (sort === "rating")
     filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+  if (sort === "length")
+    filtered = [...filtered].sort((a, b) => b.chapterCount - a.chapterCount);
+  if (sort === "new")
+    filtered = [...filtered].sort(
+      (a, b) =>
+        Date.parse(b.updatedAt || "1970-01-01") -
+        Date.parse(a.updatedAt || "1970-01-01"),
+    );
   return (
-    <main className="container page">
-      <div className="page-intro">
+    <main className="container page catalog-page">
+      <div className="page-intro catalog-intro">
         <span className="eyebrow">THƯ VIỆN TIÊN TRUYỆN</span>
         <h1>
           {ranking
             ? "Những câu chuyện được yêu thích"
-            : "Tìm một câu chuyện cho riêng bạn."}
+            : genre === "Tất cả"
+              ? "Thư viện truyện"
+              : genre}
         </h1>
-        <p>Mỗi trang truyện mở ra một chân trời mới.</p>
-      </div>
-      <div className="search-box">
-        <Search size={21} />
-        <input
-          aria-label="Tìm tên truyện hoặc tác giả"
-          placeholder="Tên truyện, tác giả bạn đang tìm…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-      <div className="filters">
-        <div className="genre-tabs">
-          {genres.map((g) => (
-            <button
-              className={genre === g ? "selected" : ""}
-              key={g}
-              onClick={() => setGenre(g)}
-            >
-              {g}
-            </button>
-          ))}
+        <p>Khám phá những thế giới mới, theo cách của bạn.</p>
+        <div className="catalog-summary">
+          <BookOpen size={17} />
+          <span>{stories.length} câu chuyện trong thư viện</span>
         </div>
-        <label>
-          <SlidersHorizontal size={16} />
-          <select
-            aria-label="Trạng thái truyện"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option>Tất cả</option>
-            <option>Đang ra</option>
-            <option>Hoàn thành</option>
-          </select>
-        </label>
-        <select
-          aria-label="Sắp xếp"
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-        >
-          <option value="new">Mới cập nhật</option>
-          <option value="rating">Đánh giá cao</option>
-        </select>
       </div>
-      <p className="result-count">
-        {filtered.length} câu chuyện {demo && "· Thư viện mẫu"}
-      </p>
+      <section
+        className="catalog-discovery"
+        aria-label="Tìm kiếm và lọc truyện"
+      >
+        <div className="search-box">
+          <Search size={21} />
+          <input
+            aria-label="Tìm tên truyện hoặc tác giả"
+            placeholder="Tên truyện, tác giả bạn đang tìm…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        <div className="filters">
+          <div className="genre-tabs" role="group" aria-label="Thể loại truyện">
+            {genres.map((g) => (
+              <button
+                aria-pressed={genre === g}
+                className={genre === g ? "selected" : ""}
+                key={g}
+                onClick={() => setGenre(g)}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="catalog-extra-filters">
+          <label>
+            <span>Trạng thái</span>
+            <Select
+              label="Trạng thái truyện"
+              value={status}
+              onValueChange={setStatus}
+              options={["Tất cả", "Đang ra", "Hoàn thành"].map((value) => ({
+                value,
+                label: value,
+              }))}
+            />
+          </label>
+          <label>
+            <span>Sắp xếp</span>
+            <Select
+              label="Sắp xếp"
+              value={sort}
+              onValueChange={setSort}
+              options={[
+                { value: "new", label: "Mới cập nhật" },
+                { value: "rating", label: "Đánh giá cao" },
+                { value: "length", label: "Nhiều chương nhất" },
+              ]}
+            />
+          </label>
+          <label>
+            <span>Độ dài</span>
+            <Select
+              label="Độ dài"
+              value={length}
+              onValueChange={setLength}
+              options={[
+                { value: "all", label: "Mọi độ dài" },
+                { value: "short", label: "Dưới 50 chương" },
+                { value: "medium", label: "50–200 chương" },
+                { value: "long", label: "Trên 200 chương" },
+              ]}
+            />
+          </label>
+          <label>
+            <span>Cập nhật trong</span>
+            <Select
+              label="Cập nhật trong"
+              value={updated}
+              onValueChange={setUpdated}
+              options={[
+                { value: "all", label: "Mọi thời điểm" },
+                { value: "1", label: "24 giờ" },
+                { value: "7", label: "7 ngày" },
+                { value: "30", label: "30 ngày" },
+              ]}
+            />
+          </label>
+          <button
+            className="text-button"
+            onClick={() => {
+              setQuery("");
+              setGenre("Tất cả");
+              setStatus("Tất cả");
+              setLength("all");
+              setUpdated("all");
+              setSort(ranking ? "rating" : "new");
+            }}
+          >
+            Xóa bộ lọc
+          </button>
+        </div>
+      </section>
+      <div className="catalog-results-heading">
+        <h2>
+          {ranking
+            ? "Bảng xếp hạng"
+            : genre === "Tất cả"
+              ? "Tất cả truyện"
+              : `Truyện ${genre.toLocaleLowerCase("vi")}`}
+        </h2>
+        <p className="result-count" role="status">
+          {filtered.length} câu chuyện {demo && "· Thư viện mẫu"}
+        </p>
+      </div>
       {filtered.length ? (
         <div className="catalog-grid">
           {filtered.map((s) => (
@@ -396,6 +493,9 @@ export function CatalogPage({
               setQuery("");
               setGenre("Tất cả");
               setStatus("Tất cả");
+              setLength("all");
+              setUpdated("all");
+              setSort(ranking ? "rating" : "new");
             }}
           >
             Xóa bộ lọc

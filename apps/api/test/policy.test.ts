@@ -49,13 +49,3 @@ test("return paths reject external redirects", () => {
   assert.equal(safeNext("/\\evil.example"), "/");
   assert.equal(safeNext("/truyen/van-dao/6"), "/truyen/van-dao/6");
 });
-
-import { base32, totp, verifyTotp } from "../src/security";
-test("TOTP follows RFC 6238 SHA-1 test vector and rejects replay", () => {
-  const secret = base32(Buffer.from("12345678901234567890"));
-  assert.equal(totp(secret, 1, 8), "94287082");
-  const code = totp(secret, 1);
-  assert.equal(verifyTotp(secret, code, 0, 59000), 1);
-  assert.equal(verifyTotp(secret, code, 1, 59000), null);
-  assert.equal(verifyTotp(secret, "abcdef", 0, 59000), null);
-});

@@ -43,3 +43,25 @@ test("valid image is cropped and reencoded without source metadata", async () =>
     await rm(dir, { recursive: true, force: true });
   }
 });
+test("Vercel refuses ephemeral filesystem storage when Blob is not configured", async (t) => {
+  const keys = ["VERCEL", "BLOB_STORE_ID", "BLOB_READ_WRITE_TOKEN"];
+  const previous = keys.map((key) => process.env[key]);
+  t.after(() =>
+    keys.forEach((key, i) => {
+      if (previous[i] === undefined) delete process.env[key];
+      else process.env[key] = previous[i];
+    }),
+  );
+  process.env.VERCEL = "1";
+  delete process.env.BLOB_STORE_ID;
+  delete process.env.BLOB_READ_WRITE_TOKEN;
+  const image = await sharp({
+    create: { width: 10, height: 10, channels: 3, background: "white" },
+  })
+    .png()
+    .toBuffer();
+  await assert.rejects(
+    storeAvatar(image.toString("base64")),
+    /cloud chưa được cấu hình/,
+  );
+});

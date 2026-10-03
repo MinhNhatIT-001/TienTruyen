@@ -1,7 +1,10 @@
 "use client";
 import Link from "next/link";
+import { Button, Input, Card } from "./ui/primitives";
+import { PaymentOrder, paymentStatus } from "./payment-order";
+import { SocialLogin, PhoneLogin, useAuthOptions } from "./auth-methods";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -11,6 +14,8 @@ import {
   Plus,
   ShieldCheck,
   Sparkles,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { format } from "../lib/types";
@@ -19,228 +24,304 @@ import { StoryCard } from "./catalog";
 export function AuthPage({ register = false }: { register?: boolean }) {
   const router = useRouter(),
     { refresh } = useApp();
+  const authOptions = useAuthOptions();
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginMode, setLoginMode] = useState<"email" | "phone">("email");
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [result, setResult] = useState<any>(null);
+  useEffect(() => {
+    const issue = new URLSearchParams(window.location.search).get("authError");
+    if (issue)
+      setError(
+        issue === "email_exists"
+          ? "Email này đã có tài khoản. Hãy đăng nhập bằng mật khẩu, rồi liên kết Google trong hồ sơ."
+          : issue === "unavailable"
+            ? "Cách đăng nhập này chưa khả dụng."
+            : "Không hoàn tất được đăng nhập. Vui lòng thử lại.",
+      );
+  }, []);
   return (
-    <main className="auth-layout">
-      <div className="auth-art">
-        <span className="eyebrow">HÀNH TRÌNH CỦA RIÊNG BẠN</span>
+    <main className="auth-layout auth-centered">
+      <aside className="auth-art">
+        <span className="auth-emblem" aria-hidden="true">
+          <BookOpen size={28} />
+        </span>
         <h2>
-          Một trang sách.
+          Mở một trang sách.
           <br />
-          Một người bạn.
-          <br />
-          Một thế giới mới.
+          Bước vào thế giới mới.
         </h2>
-        <p>
-          Lưu những câu chuyện yêu thích.
-          <br />
-          Tiếp tục hành trình ở bất cứ đâu.
-        </p>
-      </div>
-      <div className="form-card">
-        <span className="eyebrow">CHÀO MỪNG ĐẾN TIÊN TRUYỆN</span>
-        <h1>
-          {register
-            ? "Câu chuyện bắt đầu từ đây."
-            : "Thật vui khi bạn trở lại."}
-        </h1>
+        <p>Lưu truyện yêu thích và tiếp tục đọc trên mọi thiết bị.</p>
+        <span className="auth-note">Tiên Truyện · Góc đọc của bạn</span>
+      </aside>
+      <Card className="form-card">
+        <h1>{register ? "Tạo tài khoản" : "Đăng nhập"}</h1>
         <p>
           {register
             ? "Tạo tài khoản để có một góc đọc của riêng mình."
             : "Đăng nhập để tiếp tục những trang sách còn dang dở."}
         </p>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setError("");
-            setBusy(true);
-            const form = new FormData(e.currentTarget);
-            try {
-              const body = {
-                email: form.get("email"),
-                password: form.get("password"),
-                ...(!register && form.get("code")
-                  ? { code: form.get("code") }
-                  : {}),
-                ...(register ? { name: form.get("name") } : {}),
-              };
-              const r = await api(`/auth/${register ? "register" : "login"}`, {
-                method: "POST",
-                body: JSON.stringify(body),
-              });
-              if (register) setResult(r);
-              else {
-                await refresh();
-                const next =
-                  new URLSearchParams(window.location.search).get("next") ||
-                  "/";
-                router.push(
-                  next.startsWith("/") &&
-                    !next.startsWith("//") &&
-                    !next.includes("\\")
-                    ? next
-                    : "/",
+        {authOptions?.phone && (
+          <div className="login-tabs" role="group" aria-label="Cách đăng nhập">
+            <Button
+              type="button"
+              aria-pressed={loginMode === "email"}
+              onClick={() => setLoginMode("email")}
+            >
+              Email và mật khẩu
+            </Button>
+            <Button
+              type="button"
+              aria-pressed={loginMode === "phone"}
+              onClick={() => setLoginMode("phone")}
+            >
+              Số điện thoại
+            </Button>
+          </div>
+        )}
+        {loginMode === "phone" ? (
+          <PhoneLogin />
+        ) : (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setError("");
+              setBusy(true);
+              const form = new FormData(e.currentTarget);
+              try {
+                const body = {
+                  email: form.get("email"),
+                  password: form.get("password"),
+                  ...(register ? { name: form.get("name") } : {}),
+                };
+                const r = await api(
+                  `/auth/${register ? "register" : "login"}`,
+                  {
+                    method: "POST",
+                    body: JSON.stringify(body),
+                  },
                 );
+                if (register) setResult(r);
+                else {
+                  await refresh();
+                  const next =
+                    new URLSearchParams(window.location.search).get("next") ||
+                    "/";
+                  router.push(
+                    next.startsWith("/") &&
+                      !next.startsWith("//") &&
+                      !next.includes("\\")
+                      ? next
+                      : "/",
+                  );
+                }
+              } catch (e) {
+                setError((e as Error).message);
+              } finally {
+                setBusy(false);
               }
-            } catch (e) {
-              setError((e as Error).message);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          {register && (
-            <label className="field">
-              Tên hiển thị
-              <input
-                name="name"
-                autoComplete="name"
-                required
-                minLength={8}
-                maxLength={15}
-                placeholder="Tên của bạn · 8–15 ký tự"
-              />
-            </label>
-          )}
-          <label className="field">
-            Email
-            <input
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="ban@example.com"
-            />
-          </label>
-          <label className="field">
-            Mật khẩu
-            <input
-              name="password"
-              type="password"
-              autoComplete={register ? "new-password" : "current-password"}
-              required
-              minLength={register ? 10 : 1}
-              maxLength={128}
-              placeholder={
-                register ? "Ít nhất 10 ký tự" : "Nhập mật khẩu của bạn"
-              }
-            />
-          </label>
-          {!register && (
-            <>
+            }}
+          >
+            {register && (
               <label className="field">
-                Mã 2FA (nếu đã bật)
-                <input
-                  name="code"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  placeholder="6 chữ số từ ứng dụng xác thực"
+                Tên hiển thị
+                <Input
+                  name="name"
+                  autoComplete="name"
+                  required
+                  minLength={8}
+                  maxLength={15}
+                  placeholder="Tên của bạn · 8–15 ký tự"
                 />
               </label>
-              <Link className="form-caption" href="/quen-mat-khau">
-                Quên mật khẩu?
-              </Link>
-            </>
-          )}
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
-          {result && (
-            <div className="success">
-              {result.message}
-              {result.devVerifyToken && (
-                <button
+            )}
+            <label className="field">
+              Email
+              <Input
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="ban@example.com"
+              />
+            </label>
+            <label className="field">
+              Mật khẩu
+              <span className="password-control">
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  id="auth-password"
+                  aria-label="Mật khẩu"
+                  autoComplete={register ? "new-password" : "current-password"}
+                  required
+                  minLength={register ? 10 : 1}
+                  maxLength={128}
+                  placeholder={
+                    register ? "Ít nhất 10 ký tự" : "Nhập mật khẩu của bạn"
+                  }
+                />
+                <Button
                   type="button"
-                  className="btn secondary"
-                  onClick={async () => {
-                    try {
-                      setResult(
-                        await api("/auth/verify", {
-                          method: "POST",
-                          body: JSON.stringify({
-                            token: result.devVerifyToken,
-                          }),
-                        }),
-                      );
-                    } catch (e) {
-                      setError((e as Error).message);
-                    }
-                  }}
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  aria-pressed={showPassword}
+                  aria-controls="auth-password"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  Xác minh email (local)
-                </button>
-              )}
-            </div>
-          )}
-          <button disabled={busy} className="btn primary">
-            {busy ? "Đang xử lý…" : register ? "Tạo tài khoản" : "Đăng nhập"}
-            <ArrowRight size={17} />
-          </button>
-          {register && (
-            <p className="form-caption">
-              Chúng mình trân trọng quyền riêng tư và những sáng tạo có bản
-              quyền. Hãy dùng một mật khẩu riêng cho tài khoản này.
-            </p>
-          )}
-        </form>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </Button>
+              </span>
+            </label>
+            {!register && (
+              <>
+                <Link className="form-caption" href="/quen-mat-khau">
+                  Quên mật khẩu?
+                </Link>
+              </>
+            )}
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
+            {result && (
+              <div className="success">
+                {result.message}
+                {result.devVerifyToken && (
+                  <Button
+                    type="button"
+                    className="btn secondary"
+                    onClick={async () => {
+                      try {
+                        setResult(
+                          await api("/auth/verify", {
+                            method: "POST",
+                            body: JSON.stringify({
+                              token: result.devVerifyToken,
+                            }),
+                          }),
+                        );
+                      } catch (e) {
+                        setError((e as Error).message);
+                      }
+                    }}
+                  >
+                    Xác minh email (local)
+                  </Button>
+                )}
+              </div>
+            )}
+            <Button disabled={busy} className="btn primary">
+              {busy ? "Đang xử lý…" : register ? "Tạo tài khoản" : "Đăng nhập"}
+              <ArrowRight size={17} />
+            </Button>
+            {register && (
+              <p className="form-caption">
+                Chúng mình trân trọng quyền riêng tư và những sáng tạo có bản
+                quyền. Hãy dùng một mật khẩu riêng cho tài khoản này.
+              </p>
+            )}
+          </form>
+        )}
+        <div className="auth-social-section">
+          <div className="auth-divider">
+            <span>hoặc đăng nhập bằng</span>
+          </div>
+          <SocialLogin />
+        </div>
         <div className="form-switch">
           {register ? "Đã có tài khoản? " : "Chưa có tài khoản? "}
           <Link href={register ? "/dang-nhap" : "/dang-ky"}>
             {register ? "Đăng nhập" : "Tạo tài khoản mới"}
           </Link>
         </div>
-      </div>
+      </Card>
     </main>
   );
 }
 export function Library({ history = false }: { history?: boolean }) {
-  const { user, ready } = useApp();
+  const { user, ready, notify } = useApp();
   const [rows, setRows] = useState<any[]>([]),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [filter, setFilter] = useState("ALL"),
+    [busy, setBusy] = useState<string | null>(null);
+  const load = () =>
+    api<any[]>(history ? "/history" : "/library")
+      .then(setRows)
+      .catch((e) => setError(e.message));
   useEffect(() => {
-    if (user)
-      api<any[]>(history ? "/history" : "/library")
-        .then(setRows)
-        .catch((e) => setError(e.message));
-  }, [user, history]);
+    setRows([]);
+    setError("");
+    if (user) void load();
+  }, [user?.id, history]);
+  const filtered = rows.filter(
+    (r) =>
+      filter === "ALL" ||
+      (filter === "FOLLOWED" ? r.followed : r.shelf === filter),
+  );
+  async function update(id: string, data: any) {
+    setBusy(id);
+    try {
+      await api(`/library/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+      await load();
+      notify("Đã cập nhật tủ truyện.");
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
   return (
     <main className="container page">
       <div className="page-intro">
         <span className="eyebrow">GÓC NHỎ CỦA BẠN</span>
-        <h1>
-          {history ? "Những trang sách đã đi qua." : "Tủ truyện của tôi."}
-        </h1>
+        <h1>{history ? "Lịch sử đọc" : "Tủ truyện"}</h1>
         <p>Giữ lại những câu chuyện khiến bạn muốn quay về.</p>
       </div>
-      <div className="dashboard-nav">
+      <nav className="dashboard-nav">
         <Link className={!history ? "active" : ""} href="/tu-truyen">
           Truyện đã lưu
         </Link>
         <Link className={history ? "active" : ""} href="/lich-su">
           Đọc gần đây
         </Link>
-      </div>
+        <Link href="/chuong-da-mua">Chương đã mua</Link>
+        <Link href="/thong-bao">Thông báo</Link>
+      </nav>
+      {!history && user && (
+        <div className="genre-tabs shelf-tabs">
+          {[
+            ["ALL", "Tất cả"],
+            ["READING", "Đang đọc"],
+            ["FAVORITE", "Yêu thích"],
+            ["FINISHED", "Đã hoàn thành"],
+            ["FOLLOWED", "Đang theo dõi"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              className={filter === value ? "selected" : ""}
+              onClick={() => setFilter(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
       {!ready ? (
         <p>Đang tải…</p>
       ) : !user ? (
         <Empty
           title="Một góc nhỏ dành riêng cho bạn"
           text="Đăng nhập để lưu truyện và đồng bộ hành trình đọc."
-        />
-      ) : error ? (
-        <p className="error">{error}</p>
-      ) : !rows.length ? (
-        <Empty
-          title="Trang đầu tiên đang chờ bạn"
-          text="Khám phá thư viện và lưu câu chuyện bạn yêu thích."
-          href="/the-loai/tat-ca"
-          label="Khám phá truyện"
         />
       ) : history ? (
         <div className="data-list">
@@ -254,28 +335,94 @@ export function Library({ history = false }: { history?: boolean }) {
               >
                 <div>
                   <h3>{r.story.title}</h3>
-                  <p>Đang đọc chương {r.chapter}</p>
+                  <p>
+                    Chương {r.chapter} ·{" "}
+                    {r.finished
+                      ? "Đã đọc hết chương"
+                      : `${Math.round(r.position * 100)}% chương`}
+                  </p>
                 </div>
                 <span className="more-link">
                   Đọc tiếp <ArrowRight size={16} />
                 </span>
               </Link>
             ))}
-        </div>
-      ) : (
-        <div className="catalog-grid">
-          {rows.map((r) => (
-            <StoryCard
-              key={r.storyId}
-              story={{
-                ...r.story,
-                chapterCount: r.story._count.chapters,
-                rating: 0,
-                readers: 0,
-              }}
+          {!rows.length && (
+            <Empty
+              title="Trang đầu tiên đang chờ bạn"
+              text="Mở một truyện để bắt đầu hành trình đọc."
+              href="/the-loai/tat-ca"
+              label="Khám phá truyện"
             />
+          )}
+        </div>
+      ) : filtered.length ? (
+        <div className="catalog-grid">
+          {filtered.map((r) => (
+            <div className="shelf-card" key={r.storyId}>
+              <StoryCard
+                story={{
+                  ...r.story,
+                  chapterCount: r.story._count.chapters,
+                  rating: 0,
+                  readers: 0,
+                }}
+              />
+              <div className="shelf-controls">
+                <label>
+                  Ngăn tủ
+                  <select
+                    aria-label={`Ngăn tủ của ${r.story.title}`}
+                    value={r.shelf}
+                    disabled={busy === r.storyId}
+                    onChange={(e) =>
+                      void update(r.storyId, { shelf: e.target.value })
+                    }
+                  >
+                    <option value="READING">Đang đọc</option>
+                    <option value="FAVORITE">Yêu thích</option>
+                    <option value="FINISHED">Đã hoàn thành</option>
+                  </select>
+                </label>
+                <button
+                  className="text-button"
+                  disabled={busy === r.storyId}
+                  onClick={() =>
+                    void update(r.storyId, { followed: !r.followed })
+                  }
+                >
+                  {r.followed
+                    ? "Đang theo dõi · Bỏ theo dõi"
+                    : "Theo dõi chương mới"}
+                </button>
+                <button
+                  className="text-button"
+                  disabled={busy === r.storyId}
+                  onClick={async () => {
+                    setBusy(r.storyId);
+                    try {
+                      await api(`/library/${r.storyId}`, { method: "DELETE" });
+                      await load();
+                    } catch (e) {
+                      setError((e as Error).message);
+                    } finally {
+                      setBusy(null);
+                    }
+                  }}
+                >
+                  Bỏ khỏi tủ
+                </button>
+              </div>
+            </div>
           ))}
         </div>
+      ) : (
+        <Empty
+          title="Ngăn tủ này còn trống"
+          text="Lưu và sắp xếp những câu chuyện bạn yêu thích."
+          href="/the-loai/tat-ca"
+          label="Khám phá truyện"
+        />
       )}
     </main>
   );
@@ -289,6 +436,8 @@ const fallbackPackages = [
 ];
 export function Wallet({ transactions = false }: { transactions?: boolean }) {
   const { user, refresh } = useApp();
+  const paymentOptions = useAuthOptions();
+  const [orders, setOrders] = useState<any[]>([]);
   const [packages, setPackages] = useState(fallbackPackages),
     [selected, setSelected] = useState(1),
     [rows, setRows] = useState<any[]>([]),
@@ -304,6 +453,36 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
         .then(setRows)
         .catch((e) => setError(e.message));
   }, [user, transactions]);
+  useEffect(() => {
+    if (!user || transactions) return;
+    let active = true;
+    api<any[]>("/wallet/orders")
+      .then(async (rows) => {
+        if (!active) return;
+        setOrders(rows);
+        const id = new URLSearchParams(window.location.search).get("order");
+        if (id) {
+          try {
+            const r = await api(`/wallet/orders/${encodeURIComponent(id)}`);
+            if (active) setOrder(r);
+          } catch (e) {
+            if (active) setError((e as Error).message);
+          }
+        }
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id, transactions]);
+  const updateOrder = useCallback((updated: any) => {
+    setOrder(updated);
+    setOrders((rows) =>
+      rows.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)),
+    );
+  }, []);
   async function createOrder() {
     setBusy(true);
     setError("");
@@ -325,11 +504,7 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
     <main className="container page">
       <div className="page-intro">
         <span className="eyebrow">TIẾP NỐI NHỮNG CÂU CHUYỆN</span>
-        <h1>
-          {transactions
-            ? "Lịch sử giao dịch"
-            : "Thêm Hồng Ngọc, thêm hành trình."}
-        </h1>
+        <h1>{transactions ? "Lịch sử giao dịch" : "Nạp Hồng Ngọc"}</h1>
         <p>Mỗi chương bạn mở là một lời động viên gửi đến tác giả.</p>
       </div>
       {user ? (
@@ -408,12 +583,15 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
           </div>
           <p className="wallet-note">
             <ShieldCheck size={16} /> 1 Hồng Ngọc = 100đ. Thưởng theo cảnh giới
-            được máy chủ tính khi tạo đơn. Đơn nạp có hiệu lực 15 phút. Bản
-            local chưa kết nối cổng thanh toán thật.
+            được máy chủ tính khi tạo đơn. Đơn nạp có hiệu lực 15 phút.
           </p>
           {user ? (
             <button
-              disabled={busy}
+              disabled={
+                busy ||
+                !paymentOptions ||
+                !(paymentOptions.paymentReady || paymentOptions.simulate)
+              }
               className="btn primary"
               onClick={createOrder}
             >
@@ -427,44 +605,44 @@ export function Wallet({ transactions = false }: { transactions?: boolean }) {
               Đăng nhập để tiếp tục
             </Link>
           )}
-          {order && (
-            <div className="panel" style={{ marginTop: 25 }}>
-              <h2>Đơn nạp đã được tạo</h2>
-              <p>Mã đơn: {order.id}</p>
-              <p>
-                Nhận {format(order.coinsBase + order.coinsBonus)} HN ·{" "}
-                {format(order.amountVnd)}đ
-              </p>
-              <p>
-                Hết hạn lúc{" "}
-                {new Date(order.expiresAt).toLocaleTimeString("vi-VN")}
-              </p>
+          {paymentOptions &&
+            !paymentOptions.paymentReady &&
+            !paymentOptions.simulate && (
               <p className="notice">
-                Đang chờ xác nhận từ máy chủ thanh toán. Chỉ dùng giả lập khi
-                môi trường phát triển đã bật DEV_TOPUP_ENABLED.
+                Nạp Hồng Ngọc chưa được kích hoạt. Bạn vẫn có thể xem lịch sử và
+                số dư.
               </p>
-              <button
-                disabled={busy}
-                className="btn secondary"
-                onClick={async () => {
-                  setBusy(true);
-                  try {
-                    await api(`/wallet/orders/${order.id}/simulate`, {
-                      method: "POST",
-                    });
-                    await refresh();
-                    setOrder(null);
-                    setError("");
-                  } catch (e) {
-                    setError((e as Error).message);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                Xác nhận giả lập (local)
-              </button>
-            </div>
+            )}
+          {order && (
+            <PaymentOrder
+              order={order}
+              onUpdate={updateOrder}
+              simulate={!!paymentOptions?.simulate}
+            />
+          )}
+          {orders.length > 0 && (
+            <section className="topup-orders">
+              <h2>Đơn nạp gần đây</h2>
+              <div className="data-list">
+                {orders.map((o) => (
+                  <button
+                    type="button"
+                    className="data-row"
+                    key={o.id}
+                    onClick={() => {
+                      setOrder(o);
+                      setError("");
+                    }}
+                  >
+                    <span>
+                      {format(o.amountVnd)}đ ·{" "}
+                      {new Date(o.createdAt).toLocaleString("vi-VN")}
+                    </span>
+                    <strong>{paymentStatus(o.status)}</strong>
+                  </button>
+                ))}
+              </div>
+            </section>
           )}
         </>
       )}
@@ -507,7 +685,7 @@ export function Levels() {
     <main className="container page">
       <div className="page-intro">
         <span className="eyebrow">MỖI TRANG SÁCH, MỘT BƯỚC TIẾN</span>
-        <h1>Hành trình cảnh giới.</h1>
+        <h1>Cảnh giới của tôi</h1>
         <p>
           Cảnh giới ghi nhận tổng tiền nạp thành công, không giảm khi bạn dùng
           Hồng Ngọc.
@@ -564,11 +742,7 @@ export function AuthorApplication() {
     <main className="container page narrow-page">
       <div className="page-intro">
         <span className="eyebrow">GÓC DÀNH CHO NGƯỜI KỂ CHUYỆN</span>
-        <h1>
-          Thế giới của bạn,
-          <br />
-          bắt đầu từ một trang trắng.
-        </h1>
+        <h1>Đăng ký tác giả</h1>
         <p>Gửi hồ sơ để gia nhập cộng đồng tác giả Tiên Truyện.</p>
       </div>
       {!user ? (

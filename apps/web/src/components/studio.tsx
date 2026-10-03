@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
+import { DraftEditor } from "./draft-editor";
 import { useEffect, useState } from "react";
 import { ArrowRight, Plus, Feather } from "lucide-react";
-import { ChapterManager } from "./management";
+import { ChapterManager, StorySettings } from "./management";
 import { api } from "../lib/api";
 import { useApp, Empty } from "./shell";
 import { format } from "../lib/types";
@@ -27,7 +28,7 @@ export function Studio({ path }: { path: string[] }) {
           .then(setEarnings)
           .catch((e) => setError(e.message));
       else
-        api<any[]>("/author/stories")
+        api<any[]>("/author/stats")
           .then(setRows)
           .catch((e) => setError(e.message));
     }
@@ -38,19 +39,25 @@ export function Studio({ path }: { path: string[] }) {
         <span className="eyebrow">KHÔNG GIAN SÁNG TÁC</span>
         <h1>
           {isNew
-            ? "Khởi đầu một thế giới mới."
+            ? "Tạo truyện mới"
             : isChapter
-              ? "Viết tiếp hành trình."
+              ? "Bàn viết"
               : isRevenue
-                ? "Thành quả từ từng trang viết."
-                : "Chào người kể chuyện."}
+                ? "Doanh thu & cấp bậc"
+                : "Truyện của tôi"}
         </h1>
-        <p>Mỗi câu chữ đều có thể trở thành một nơi để ai đó tìm về.</p>
+        <p>Quản lý truyện, bản nháp và lịch đăng chương.</p>
       </div>
       <nav className="dashboard-nav">
-        <Link href="/tac-gia">Truyện của tôi</Link>
-        <Link href="/tac-gia/truyen-moi">Tạo truyện mới</Link>
-        <Link href="/tac-gia/doanh-thu">Doanh thu & cấp bậc</Link>
+        <Link className={!isNew && !isRevenue ? "active" : ""} href="/tac-gia">
+          Truyện của tôi
+        </Link>
+        <Link className={isNew ? "active" : ""} href="/tac-gia/truyen-moi">
+          Tạo truyện mới
+        </Link>
+        <Link className={isRevenue ? "active" : ""} href="/tac-gia/doanh-thu">
+          Doanh thu & cấp bậc
+        </Link>
       </nav>
       {!user?.roles.includes("AUTHOR") ? (
         <Empty
@@ -62,7 +69,37 @@ export function Studio({ path }: { path: string[] }) {
       ) : (
         <>
           {error && <p className="error">{error}</p>}
-          {isNew || isChapter ? (
+          {!isNew && !isChapter && !isRevenue && rows.length > 0 && (
+            <div className="studio-metrics">
+              <div>
+                Truyện đang quản lý<strong>{rows.length}</strong>
+              </div>
+              <div>
+                Lượt mua chương
+                <strong>
+                  {format(rows.reduce((n, s) => n + (s.sales || 0), 0))}
+                </strong>
+              </div>
+              <div>
+                Doanh thu sau hoàn tiền
+                <strong>
+                  {format(rows.reduce((n, s) => n + (s.revenue || 0), 0))} HN
+                </strong>
+              </div>
+            </div>
+          )}
+
+          {isChapter ? (
+            <DraftEditor
+              key={String(path[2])}
+              storyId={String(path[2])}
+              onPublished={() => {
+                void api(`/author/stories/${path[2]}`)
+                  .then(setStory)
+                  .catch((e) => setError(e.message));
+              }}
+            />
+          ) : isNew ? (
             <form
               className="standard-form narrow-page"
               onSubmit={async (e) => {
@@ -237,7 +274,9 @@ export function Studio({ path }: { path: string[] }) {
                   <div>
                     <h3>{s.title}</h3>
                     <p>
-                      {s._count.chapters} chương ·{" "}
+                      {s._count.chapters} chương · {s.readers || 0} độc giả ·{" "}
+                      {s.sales || 0} lượt mua · {format(s.revenue || 0)} HN
+                      doanh thu ·{" "}
                       {{
                         PENDING: "Chờ duyệt",
                         APPROVED: "Đã duyệt",
@@ -266,6 +305,39 @@ export function Studio({ path }: { path: string[] }) {
               label="Tạo truyện mới"
             />
           )}
+          {isRevenue && earnings?.rows?.length > 0 && (
+            <section className="panel" style={{ marginTop: 24 }}>
+              <h2>Lịch sử doanh thu</h2>
+              <div className="data-list">
+                {earnings.rows.map((r: any) => (
+                  <div className="data-row" key={r.id}>
+                    <div>
+                      <h3>{format(r.amount)} HN</h3>
+                      <p>{new Date(r.createdAt).toLocaleString("vi-VN")}</p>
+                    </div>
+                    <span>
+                      {(
+                        {
+                          AVAILABLE: "Khả dụng",
+                          RESERVED: "Đang chờ chi trả",
+                          PAID: "Đã chi trả",
+                          REFUNDED: "Đã hoàn tiền",
+                        } as Record<string, string>
+                      )[r.status] || r.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+          {isChapter && (
+            <StorySettings
+              story={story}
+              onUpdated={(updated) =>
+                setStory((s: any) => ({ ...s, ...updated }))
+              }
+            />
+          )}
           {isChapter && <ChapterManager story={story} />}
         </>
       )}
@@ -285,6 +357,7 @@ export function Admin({ path }: { path: string[] }) {
         "nhat-ky": "audit",
         "rut-tien": "payouts",
         "luot-mua": "purchases",
+        "don-nap": "topups",
       } as Record<string, string>
     )[path[1]] || "applications";
   const [rows, setRows] = useState<any[]>([]),
@@ -339,6 +412,7 @@ export function Admin({ path }: { path: string[] }) {
               ["nhat-ky", "Nhật ký"],
               ["rut-tien", "Rút tiền"],
               ["luot-mua", "Hoàn tiền"],
+              ["don-nap", "Đơn nạp cần kiểm tra"],
               ["cau-hinh", "Cấu hình"],
             ].map(([href, label]) => (
               <Link key={href} href={`/admin/${href}`}>
@@ -364,6 +438,22 @@ export function Admin({ path }: { path: string[] }) {
                     <p>
                       {r.email || r.bio || r.description || r.reason || r.id}
                     </p>
+                    {r.context && (
+                      <div className="moderation-context">
+                        <strong>{r.context.title}</strong>
+                        <p>{r.context.content}</p>
+                        {r.context.slug && (
+                          <Link
+                            className="more-link"
+                            href={`/truyen/${r.context.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Mở truyện →
+                          </Link>
+                        )}
+                      </div>
+                    )}
                     {r.sampleText && (
                       <details>
                         <summary>Đọc văn mẫu</summary>
@@ -406,6 +496,43 @@ export function Admin({ path }: { path: string[] }) {
                       >
                         Ẩn nội dung vi phạm
                       </button>
+                    </div>
+                  )}
+                  {section === "topups" && (
+                    <div>
+                      <p>
+                        {r.reviewReason} · Đơn {format(r.amountVnd)}đ · Đã nhận{" "}
+                        {format(r.receivedVnd || 0)}đ
+                      </p>
+                      <div className="row-actions">
+                        {(["CREDIT", "REFUNDED"] as const).map((action) => (
+                          <button
+                            key={action}
+                            className="btn secondary"
+                            onClick={async () => {
+                              const note = window.prompt(
+                                action === "CREDIT"
+                                  ? "Ghi chú đối soát (chỉ cộng khi payOS xác nhận đúng đủ tiền):"
+                                  : "Chỉ xác nhận sau khi đã hoàn tiền qua ngân hàng. Nhập mã giao dịch/ghi chú hoàn tiền:",
+                              );
+                              if (!note) return;
+                              try {
+                                await api(`/admin/topups/${r.id}`, {
+                                  method: "POST",
+                                  body: JSON.stringify({ action, note }),
+                                });
+                                void load();
+                              } catch (e) {
+                                setError((e as Error).message);
+                              }
+                            }}
+                          >
+                            {action === "CREDIT"
+                              ? "Đối soát và cộng ví"
+                              : "Xác nhận đã hoàn tiền"}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {section === "payouts" && (

@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { put } from "@vercel/blob";
 import { createHash, randomInt } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import { resolve, join } from "path";
@@ -35,6 +36,15 @@ export async function storeAvatar(base64: string, directory = avatarDirectory) {
     .webp({ quality: 85 })
     .toBuffer();
   const file = createHash("sha256").update(output).digest("hex") + ".webp";
+  if (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID) {
+    const blob = await put(`avatars/${file}`, output, {
+      access: "public",
+      contentType: "image/webp",
+      addRandomSuffix: true,
+    });
+    return blob.url;
+  }
+  if (process.env.VERCEL) throw new Error("Kho ảnh cloud chưa được cấu hình.");
   await mkdir(directory, { recursive: true });
   await writeFile(join(directory, file), output, { mode: 0o644 });
   return `/api/avatars/uploads/${file}`;

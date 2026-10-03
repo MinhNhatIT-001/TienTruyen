@@ -1,0 +1,11 @@
+ALTER TABLE "User" DROP COLUMN "twoFactorSecret", DROP COLUMN "twoFactorPending", DROP COLUMN "twoFactorLastCounter";
+ALTER TABLE "User" ADD COLUMN "phone" TEXT, ADD COLUMN "phoneVerified" BOOLEAN NOT NULL DEFAULT false;
+CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
+ALTER TABLE "TopupOrder" ADD COLUMN "provider" TEXT NOT NULL DEFAULT 'LOCAL', ADD COLUMN "orderCode" TEXT, ADD COLUMN "checkoutUrl" TEXT, ADD COLUMN "paymentLinkId" TEXT;
+CREATE UNIQUE INDEX "TopupOrder_orderCode_key" ON "TopupOrder"("orderCode");
+CREATE UNIQUE INDEX "TopupOrder_paymentLinkId_key" ON "TopupOrder"("paymentLinkId");
+CREATE TABLE "SocialAccount" ("id" TEXT PRIMARY KEY, "userId" TEXT NOT NULL REFERENCES "User"("id"), "provider" TEXT NOT NULL, "subject" TEXT NOT NULL);
+CREATE UNIQUE INDEX "SocialAccount_provider_subject_key" ON "SocialAccount"("provider", "subject");
+CREATE UNIQUE INDEX "SocialAccount_userId_provider_key" ON "SocialAccount"("userId", "provider");
+CREATE TABLE "LoginChallenge" ("id" TEXT PRIMARY KEY, "kind" TEXT NOT NULL, "payload" JSONB NOT NULL, "bindingHash" TEXT NOT NULL, "attempts" INTEGER NOT NULL DEFAULT 0, "expiresAt" TIMESTAMP(3) NOT NULL, "usedAt" TIMESTAMP(3), "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "LoginChallenge_expiresAt_idx" ON "LoginChallenge"("expiresAt");

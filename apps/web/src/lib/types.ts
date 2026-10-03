@@ -8,6 +8,7 @@ export type Story = {
   description: string;
   progress: string;
   chapterCount: number;
+  updatedAt?: string;
   rating: number;
   readers: number;
 };
@@ -15,6 +16,9 @@ export type User = {
   id: string;
   name: string;
   avatar?: string;
+  phone?: string;
+  phoneVerified?: boolean;
+  socialAccounts?: { provider: string }[];
   email: string;
   roles: string[];
   balance: number;

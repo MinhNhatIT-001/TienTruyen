@@ -10,6 +10,8 @@ import {
 import { RoutePage } from "../../components/routes";
 const routes = new Set([
   "truyen",
+  "thong-bao",
+  "chuong-da-mua",
   "tai-khoan",
   "tim-kiem",
   "the-loai",

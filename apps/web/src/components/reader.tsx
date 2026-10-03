@@ -1,5 +1,12 @@
 "use client";
 import Link from "next/link";
+import {
+  StoryReadingActions,
+  BatchUnlock,
+  ReaderContents,
+  useReadingPosition,
+} from "./reading-tools";
+import { StoryComments } from "./community";
 import { useEffect, useState, type CSSProperties } from "react";
 import {
   ArrowLeft,
@@ -30,6 +37,10 @@ export type Chapter = {
   price: number;
   content?: string;
   owned?: boolean;
+  position?: number;
+  progressUpdatedAt?: string;
+  previousNumber?: number | null;
+  nextNumber?: number | null;
   story?: { title: string; slug: string };
 };
 export type PublicStory = Story & { chapters: Chapter[]; comments: any[] };
@@ -43,11 +54,16 @@ export function StoryPage({
   const { stories, demo } = useCatalog(),
     story = initialStory || stories.find((s) => s.slug === slug);
   const [tab, setTab] = useState("intro"),
+    [ownedChapters, setOwnedChapters] = useState<Set<string>>(new Set()),
     [chapters, setChapters] = useState<Chapter[]>(initialStory?.chapters || []),
     [saved, setSaved] = useState(false),
     [comments, setComments] = useState<any[]>(initialStory?.comments || []),
     [comment, setComment] = useState("");
   const { user, notify } = useApp();
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("tab") === "comments")
+      setTab("comments");
+  }, []);
   useEffect(() => {
     api<any>(`/stories/${slug}`)
       .then((d) => {
@@ -203,6 +219,7 @@ export function StoryPage({
               </>
             )}
           </div>
+          <StoryReadingActions storyId={story.id} slug={slug} />
           <p className="fine-print">
             {demo
               ? "Truyện mẫu do Tiên Truyện biên soạn để xem giao diện."
@@ -268,71 +285,41 @@ export function StoryPage({
           </aside>
         </div>
       ) : tab === "chapters" ? (
-        <div className="chapter-list">
-          {chapters.map((c) => (
-            <Link href={`/truyen/${slug}/${c.number}`} key={c.number}>
-              <span>
-                <small>{String(c.number).padStart(2, "0")}</small>
-                {c.title}
-              </span>
-              {c.isFree ? (
-                <span className="free">Miễn phí</span>
-              ) : (
-                <span className="ruby">
-                  <Lock size={13} />
-                  {c.price} HN
+        <div>
+          <BatchUnlock
+            slug={slug}
+            chapters={chapters}
+            onOwnershipChange={setOwnedChapters}
+          />
+          <div className="chapter-list">
+            {chapters.map((c) => (
+              <Link href={`/truyen/${slug}/${c.number}`} key={c.number}>
+                <span>
+                  <small>{String(c.number).padStart(2, "0")}</small>
+                  {c.title}
                 </span>
-              )}
-            </Link>
-          ))}
+                {ownedChapters.has(c.id) ? (
+                  <span className="free">
+                    <Check size={13} /> Đã mở khóa
+                  </span>
+                ) : c.isFree ? (
+                  <span className="free">Miễn phí</span>
+                ) : (
+                  <span className="ruby">
+                    <Lock size={13} />
+                    {c.price} HN
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
         </div>
       ) : (
-        <section className="comments">
-          <h2>Cùng trò chuyện về câu chuyện</h2>
-          {user ? (
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  await api(`/stories/${story.id}/comments`, {
-                    method: "POST",
-                    body: JSON.stringify({ content: comment }),
-                  });
-                  const d = await api<any>(`/stories/${slug}`);
-                  setComments(d.comments);
-                  setComment("");
-                } catch (e) {
-                  notify((e as Error).message);
-                }
-              }}
-            >
-              <textarea
-                required
-                maxLength={2000}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Chia sẻ cảm nhận của bạn…"
-              />
-              <button className="btn primary">Gửi bình luận</button>
-            </form>
-          ) : (
-            <p>
-              <Link href="/dang-nhap">Đăng nhập</Link> để chia sẻ cảm nhận.
-            </p>
-          )}
-          {comments.length ? (
-            comments.map((c) => (
-              <article className="comment" key={c.id}>
-                <strong>{c.user.name}</strong>
-                <p>{c.content}</p>
-              </article>
-            ))
-          ) : (
-            <p className="muted">
-              Chưa có bình luận. Hãy là người đầu tiên mở lời.
-            </p>
-          )}
-        </section>
+        <StoryComments
+          storyId={story.id}
+          slug={slug}
+          initialComments={comments}
+        />
       )}
     </main>
   );
@@ -568,6 +555,7 @@ export function Reader({
 }) {
   const { settings, setSettings, loaded, sync } = useReaderSettings();
   const [panel, setPanel] = useState(false),
+    [positionReady, setPositionReady] = useState(false),
     [chapter, setChapter] = useState<Chapter | null>(initialChapter || null),
     [demo, setDemo] = useState(false),
     [error, setError] = useState(""),
@@ -579,9 +567,11 @@ export function Reader({
   const load = () =>
     api<Chapter>(`/stories/${slug}/chapters/${number}`).then((c) => {
       setChapter(c);
+      setPositionReady(true);
       setError("");
     });
   useEffect(() => {
+    setPositionReady(false);
     setChapter(initialChapter || null);
     setDemo(false);
     load().catch((e) => {
@@ -589,6 +579,7 @@ export function Reader({
         setError(e.message);
         return;
       }
+      setPositionReady(true);
       setDemo(true);
       if (!Number.isInteger(number) || number < 1 || number > 12) {
         setError("Không tìm thấy chương.");
@@ -598,6 +589,8 @@ export function Reader({
         id: "sample",
         number,
         title: "Sương sớm Thanh Vân",
+        previousNumber: number > 1 ? number - 1 : null,
+        nextNumber: number < 12 ? number + 1 : null,
         isFree: number <= 5,
         price: 20,
         content:
@@ -607,12 +600,21 @@ export function Reader({
       });
     });
   }, [slug, number]);
+  useReadingPosition(
+    slug,
+    number,
+    positionReady ? chapter?.content : undefined,
+    chapter?.position || 0,
+    demo,
+    chapter?.progressUpdatedAt,
+  );
   async function buy() {
     if (!chapter || busy) return;
     setBusy(true);
     try {
       await api(`/purchases/${chapter.id}`, {
         method: "POST",
+        body: JSON.stringify({ expectedPrice: chapter.price }),
         headers: { "Idempotency-Key": crypto.randomUUID() },
       });
       await refresh();
@@ -655,6 +657,7 @@ export function Reader({
           <ArrowLeft size={16} />
           <span>{story?.title || "Về trang truyện"}</span>
         </Link>
+        <ReaderContents slug={slug} current={number} />
         <button onClick={() => setPanel(!panel)} aria-expanded={panel}>
           <Settings2 size={18} /> Tùy chỉnh
         </button>
@@ -731,10 +734,10 @@ export function Reader({
         ) : null}
         <div className="reader-end">✦</div>
         <nav className="chapter-nav">
-          {number > 1 ? (
+          {chapter?.previousNumber ? (
             <Link
               className="btn secondary"
-              href={`/truyen/${slug}/${number - 1}`}
+              href={`/truyen/${slug}/${chapter.previousNumber}`}
             >
               <ArrowLeft size={16} /> Chương trước
             </Link>
@@ -748,10 +751,10 @@ export function Reader({
           >
             <List size={21} />
           </Link>
-          {number < (story?.chapterCount || 12) && (
+          {chapter?.nextNumber && (
             <Link
               className="btn primary"
-              href={`/truyen/${slug}/${number + 1}`}
+              href={`/truyen/${slug}/${chapter.nextNumber}`}
             >
               Chương sau <ArrowRight size={16} />
             </Link>

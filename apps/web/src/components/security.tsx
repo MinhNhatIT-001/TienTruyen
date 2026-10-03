@@ -3,10 +3,104 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "../lib/api";
 import { useApp, Empty } from "./shell";
+function RecoveryEmailSettings() {
+  const [token, setToken] = useState(""),
+    [message, setMessage] = useState(""),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  const { refresh } = useApp();
+  useEffect(() => {
+    setToken(new URLSearchParams(window.location.search).get("recovery") || "");
+  }, []);
+  return (
+    <section className="panel" style={{ marginTop: 24 }}>
+      <h2>Email khôi phục và mật khẩu</h2>
+      <p>
+        Xác minh một email bạn sở hữu để có thể đăng nhập bằng mật khẩu hoặc
+        khôi phục tài khoản khi mất quyền truy cập mạng xã hội.
+      </p>
+      <form
+        className="standard-form"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError("");
+          const data = new FormData(e.currentTarget);
+          try {
+            const r = await api<any>(
+              token ? "/auth/recovery-email/confirm" : "/auth/recovery-email",
+              {
+                method: "POST",
+                body: JSON.stringify(
+                  token
+                    ? { token, password: data.get("password") }
+                    : { email: data.get("email") },
+                ),
+              },
+            );
+            setMessage(r.message);
+            if (r.devRecoveryToken) setToken(r.devRecoveryToken);
+            else if (token) {
+              setToken("");
+              await refresh();
+              window.history.replaceState(null, "", "/bao-mat");
+            }
+          } catch (e) {
+            setError((e as Error).message);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {token ? (
+          <label className="field">
+            Mật khẩu mới
+            <input
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              minLength={10}
+              maxLength={128}
+              required
+              placeholder="Ít nhất 10 ký tự"
+            />
+          </label>
+        ) : (
+          <label className="field">
+            Email khôi phục
+            <input
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              placeholder="Email bạn có thể nhận thư"
+            />
+          </label>
+        )}
+        <button className="btn primary" disabled={busy}>
+          {busy
+            ? "Đang xử lý…"
+            : token
+              ? "Xác minh và đặt mật khẩu"
+              : "Gửi liên kết xác minh"}
+        </button>
+        {message && (
+          <p role="status" className="success">
+            {message}
+          </p>
+        )}
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+      </form>
+    </section>
+  );
+}
 export function SecurityPage() {
   const { user, refresh, notify } = useApp();
-  const [setup, setSetup] = useState<any>(null),
-    [sessions, setSessions] = useState<any[]>([]),
+  const [sessions, setSessions] = useState<any[]>([]),
     [error, setError] = useState("");
   useEffect(() => {
     if (user)
@@ -19,95 +113,21 @@ export function SecurityPage() {
       <div className="page-intro">
         <span className="eyebrow">GIỮ AN TOÀN CHO HÀNH TRÌNH</span>
         <h1>Bảo mật tài khoản</h1>
-        <p>
-          Xác thực hai bước là bắt buộc khi sử dụng quyền tác giả hoặc quản trị.
-        </p>
+        <p>Quản lý những thiết bị đang đăng nhập vào tài khoản của bạn.</p>
       </div>
       {!user ? (
         <Empty
           title="Đăng nhập để quản lý bảo mật"
-          text="Xem các thiết bị đang đăng nhập và bật xác thực hai bước."
+          text="Xem và thu hồi các phiên đăng nhập trên thiết bị khác."
         />
       ) : (
         <>
-          <section className="panel">
-            <h2>Xác thực hai bước</h2>
-            {(user as any).twoFactorEnabled ? (
-              <p className="success">2FA đã được bật cho tài khoản này.</p>
-            ) : setup ? (
-              <form
-                className="standard-form"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  try {
-                    const code = new FormData(e.currentTarget).get("code");
-                    await api("/auth/2fa/enable", {
-                      method: "POST",
-                      body: JSON.stringify({ code }),
-                    });
-                    setSetup(null);
-                    await refresh();
-                    notify("Đã bật xác thực hai bước.");
-                  } catch (e) {
-                    setError((e as Error).message);
-                  }
-                }}
-              >
-                <p>
-                  Thêm khóa dưới đây vào ứng dụng xác thực (Google
-                  Authenticator, 1Password…), rồi nhập mã 6 số để xác nhận.
-                </p>
-                <code className="secret-key">{setup.secret}</code>
-                <label className="field">
-                  Mã xác thực
-                  <input
-                    name="code"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]{6}"
-                    required
-                    maxLength={6}
-                  />
-                </label>
-                <button className="btn primary">Xác nhận bật 2FA</button>
-              </form>
-            ) : (
-              <form
-                className="standard-form"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  try {
-                    setSetup(
-                      await api("/auth/2fa/setup", {
-                        method: "POST",
-                        body: JSON.stringify({
-                          password: new FormData(e.currentTarget).get(
-                            "password",
-                          ),
-                        }),
-                      }),
-                    );
-                  } catch (e) {
-                    setError((e as Error).message);
-                  }
-                }}
-              >
-                <label className="field">
-                  Xác nhận mật khẩu
-                  <input
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                  />
-                </label>
-                <button className="btn primary">
-                  Thiết lập xác thực hai bước
-                </button>
-              </form>
-            )}
-            {error && <p className="error">{error}</p>}
-          </section>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+          <RecoveryEmailSettings />
           <section className="panel" style={{ marginTop: 25 }}>
             <h2>Thiết bị đang đăng nhập</h2>
             <div className="data-list">
@@ -162,7 +182,7 @@ export function RecoveryPage({
           {mode === "verify"
             ? "Xác minh email"
             : mode === "forgot"
-              ? "Tìm lại chìa khóa của bạn."
+              ? "Quên mật khẩu"
               : "Đặt mật khẩu mới"}
         </h1>
       </div>

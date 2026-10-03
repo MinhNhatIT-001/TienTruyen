@@ -18,7 +18,7 @@ async function main() {
     data: { actorId: user.id, action: "LOCAL_ADMIN_BOOTSTRAP" },
   });
   console.log(
-    "Local admin role enabled. Enable 2FA before using privileged actions.",
+    "Local admin role enabled.",
   );
 }
 main()

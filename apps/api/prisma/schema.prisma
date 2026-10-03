@@ -8,14 +8,13 @@ datasource db {
 model User {
   id String @id @default(cuid())
   email String @unique
+  phone String? @unique
+  phoneVerified Boolean @default(false)
   name String
   avatar String @default("/avatars/avatar-01.webp")
   passwordHash String
   roles String[] @default(["READER"])
   emailVerified Boolean @default(false)
-  twoFactorSecret String?
-  twoFactorPending String?
-  twoFactorLastCounter Int @default(0)
   totalTopupVnd Int @default(0)
   readerSettings Json @default("{}")
   createdAt DateTime @default(now())
@@ -28,6 +27,8 @@ model User {
   progress ReadingProgress[]
   comments Comment[]
   ratings Rating[]
+  socialAccounts SocialAccount[]
+  notifications Notification[]
 }
 model Session {
   id String @id @default(cuid())
@@ -44,6 +45,7 @@ model OneTimeToken {
   userId String
   tokenHash String @unique
   purpose String
+  targetEmail String?
   expiresAt DateTime
   usedAt DateTime?
 }
@@ -77,9 +79,11 @@ model Story {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   chapters Chapter[]
+  @@index([status,updatedAt])
   bookmarks Bookmark[]
   ratings Rating[]
   comments Comment[]
+  drafts ChapterDraft[]
 }
 model Chapter {
   id String @id @default(cuid())
@@ -126,6 +130,7 @@ model ChapterPurchase {
   rateApplied Int
   createdAt DateTime @default(now())
   @@unique([userId,chapterId])
+  @@index([chapterId,createdAt])
 }
 model TopupOrder {
   id String @id @default(cuid())
@@ -135,6 +140,14 @@ model TopupOrder {
   coinsBonus Int
   status String @default("PENDING")
   providerTxnId String? @unique
+  provider String @default("LOCAL")
+  orderCode String? @unique
+  checkoutUrl String?
+  qrCode String?
+  reviewReason String?
+  receivedVnd Int?
+  lastCheckedAt DateTime?
+  paymentLinkId String? @unique
   idempotencyKey String @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -165,14 +178,20 @@ model Bookmark {
   user User @relation(fields:[userId],references:[id])
   story Story @relation(fields:[storyId],references:[id])
   createdAt DateTime @default(now())
+  shelf String @default("READING")
+  followed Boolean @default(false)
+  @@index([storyId,followed])
   @@id([userId,storyId])
 }
 model ReadingProgress {
   userId String
   storyId String
   chapter Int
+  position Float @default(0)
+  finished Boolean @default(false)
   user User @relation(fields:[userId],references:[id])
   updatedAt DateTime @updatedAt
+  @@index([storyId])
   @@id([userId,storyId])
 }
 model Comment {
@@ -182,7 +201,12 @@ model Comment {
   user User @relation(fields:[userId],references:[id])
   story Story @relation(fields:[storyId],references:[id])
   content String
+  hidden Boolean @default(false)
+  parentId String?
+  parent Comment? @relation("Replies",fields:[parentId],references:[id])
+  replies Comment[] @relation("Replies")
   createdAt DateTime @default(now())
+  @@index([storyId,createdAt])
 }
 model Rating {
   userId String
@@ -190,6 +214,7 @@ model Rating {
   user User @relation(fields:[userId],references:[id])
   story Story @relation(fields:[storyId],references:[id])
   score Int
+  @@index([storyId])
   @@id([userId,storyId])
 }
 model Report {
@@ -207,4 +232,55 @@ model AuditLog {
   targetId String?
   meta Json @default("{}")
   createdAt DateTime @default(now())
+}
+
+model SocialAccount {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  provider String
+  subject String
+  @@unique([provider, subject])
+  @@unique([userId, provider])
+}
+model LoginChallenge {
+  id String @id @default(cuid())
+  kind String
+  payload Json
+  bindingHash String
+  attempts Int @default(0)
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+}
+
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  title String
+  href String
+  eventKey String @unique
+  readAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId,createdAt])
+}
+model ChapterDraft {
+  revision Int @default(0)
+  id String @id @default(cuid())
+  storyId String
+  story Story @relation(fields:[storyId],references:[id])
+  title String @default("")
+  content String @default("")
+  isFree Boolean @default(true)
+  price Int @default(0)
+  status String @default("DRAFT")
+  scheduledAt DateTime?
+  chapterId String? @unique
+  error String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status,scheduledAt])
+  @@index([storyId,updatedAt])
 }

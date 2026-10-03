@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
+import { NotificationBell } from "./reading-tools";
 import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
   useContext,
   useEffect,
   useState,
+  useRef,
   type ReactNode,
 } from "react";
 import {
@@ -77,33 +79,49 @@ export function Header() {
     router = useRouter();
   const [mobile, setMobile] = useState(false),
     [menu, setMenu] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    accountRef.current?.querySelector<HTMLAnchorElement>("nav a")?.focus();
+    const dismiss = (event: PointerEvent) => {
+      if (!accountRef.current?.contains(event.target as Node)) setMenu(false);
+    };
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [menu]);
   useEffect(() => {
     setMobile(false);
     setMenu(false);
   }, [path]);
   return (
     <>
-      <div className="announcement">
-        Mỗi câu chuyện, một thế giới chờ bạn khám phá <span>✦</span>
-      </div>
-      <header className="header">
+      <header
+        className="header"
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && mobile) {
+            setMobile(false);
+            mobileTriggerRef.current?.focus();
+          }
+        }}
+      >
         <div className={`header-inner ${user ? "has-user" : ""}`}>
           <Link href="/" className="brand">
             <span className="seal">仙</span>
             <span>
               Tiên <span className="brand-light">Truyện</span>
-              <small>CHẠM VÀO MỘT THẾ GIỚI KHÁC</small>
             </span>
           </Link>
-          <nav className="desktop-nav">
+          <nav className="desktop-nav" aria-label="Điều hướng chính">
             <Link className={path === "/" ? "active" : ""} href="/">
-              Khám phá
+              Trang chủ
             </Link>
             <Link
               className={path.startsWith("/the-loai") ? "active" : ""}
               href="/the-loai/tat-ca"
             >
-              Thể loại <ChevronDown size={12} />
+              Thể loại
             </Link>
             <Link
               className={path === "/bang-xep-hang" ? "active" : ""}
@@ -111,9 +129,15 @@ export function Header() {
             >
               Xếp hạng
             </Link>
-            <Link href="/tu-truyen">Tủ truyện</Link>
+            <Link
+              className={path === "/tu-truyen" ? "active" : ""}
+              href="/tu-truyen"
+            >
+              Tủ truyện
+            </Link>
           </nav>
           <div className="header-actions">
+            <NotificationBell />
             <Link className="icon-btn" href="/tim-kiem" aria-label="Tìm truyện">
               <Search size={20} />
             </Link>
@@ -125,9 +149,20 @@ export function Header() {
                   {format(user.balance)}
                   <span>HN</span>
                 </Link>
-                <div className="user-wrap">
+                <div
+                  className="user-wrap"
+                  ref={accountRef}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      setMenu(false);
+                      triggerRef.current?.focus();
+                    }
+                  }}
+                >
                   <button
+                    ref={triggerRef}
                     className="account-trigger"
+                    aria-controls="account-navigation"
                     aria-label="Mở menu tài khoản"
                     aria-expanded={menu}
                     onClick={() => setMenu(!menu)}
@@ -150,19 +185,29 @@ export function Header() {
                     <ChevronDown size={12} aria-hidden="true" />
                   </button>
                   {menu && (
-                    <div className="user-menu">
+                    <nav
+                      className="user-menu"
+                      id="account-navigation"
+                      aria-label="Điều hướng tài khoản"
+                    >
                       <strong>{user.name}</strong>
                       <small>{user.email}</small>
-                      <Link href="/tai-khoan">Hồ sơ tài khoản</Link>
-                      <Link href="/cap-bac">Cảnh giới của tôi</Link>
+                      <Link href="/tai-khoan">
+                        <UserRound size={16} /> Hồ sơ & cài đặt
+                      </Link>
+                      <Link href="/nap-hong-ngoc">
+                        <Diamond size={16} /> Ví Hồng Ngọc ·{" "}
+                        {format(user.balance)}
+                      </Link>
                       <Link href="/lich-su-giao-dich">Lịch sử giao dịch</Link>
-                      <Link href="/cai-dat">Cài đặt đọc</Link>
-                      <Link href="/bao-mat">Bảo mật tài khoản</Link>
+                      <Link href="/tu-truyen">
+                        <BookOpen size={16} /> Tủ truyện
+                      </Link>
                       {user.roles.includes("AUTHOR") ? (
-                        <Link href="/tac-gia">Góc tác giả</Link>
-                      ) : (
-                        <Link href="/tro-thanh-tac-gia">Trở thành tác giả</Link>
-                      )}
+                        <Link href="/tac-gia">
+                          <Feather size={16} /> Góc tác giả
+                        </Link>
+                      ) : null}
                       {user.roles.includes("ADMIN") && (
                         <Link href="/admin">Quản trị</Link>
                       )}
@@ -176,7 +221,7 @@ export function Header() {
                       >
                         <LogOut size={15} /> Đăng xuất
                       </button>
-                    </div>
+                    </nav>
                   )}
                 </div>
               </>
@@ -186,8 +231,10 @@ export function Header() {
               </Link>
             )}
             <button
+              ref={mobileTriggerRef}
               className="icon-btn mobile-toggle"
-              aria-label="Mở điều hướng"
+              aria-label={mobile ? "Đóng menu" : "Mở menu"}
+              aria-controls="mobile-navigation"
               aria-expanded={mobile}
               onClick={() => setMobile(!mobile)}
             >
@@ -196,11 +243,34 @@ export function Header() {
           </div>
         </div>
         {mobile && (
-          <nav className="mobile-nav">
-            <Link href="/">Khám phá</Link>
-            <Link href="/the-loai/tat-ca">Thể loại</Link>
-            <Link href="/bang-xep-hang">Xếp hạng</Link>
-            <Link href="/tu-truyen">Tủ truyện</Link>
+          <nav
+            className="mobile-nav"
+            id="mobile-navigation"
+            aria-label="Điều hướng chính trên điện thoại"
+          >
+            <Link href="/" aria-current={path === "/" ? "page" : undefined}>
+              Trang chủ
+            </Link>
+            <Link
+              href="/the-loai/tat-ca"
+              aria-current={path.startsWith("/the-loai") ? "page" : undefined}
+            >
+              Thể loại
+            </Link>
+            <Link
+              href="/bang-xep-hang"
+              aria-current={path === "/bang-xep-hang" ? "page" : undefined}
+            >
+              Xếp hạng
+            </Link>
+            <Link
+              href="/tu-truyen"
+              aria-current={path === "/tu-truyen" ? "page" : undefined}
+            >
+              Tủ truyện
+            </Link>
+            <Link href="/tim-kiem">Tìm kiếm</Link>
+            {user && <Link href="/thong-bao">Thông báo</Link>}
           </nav>
         )}
       </header>

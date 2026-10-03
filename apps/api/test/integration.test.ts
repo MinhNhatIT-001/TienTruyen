@@ -211,6 +211,121 @@ test(
         "duplicate signed webhook credits once",
       );
     }
+    const detail = await call("/stories/van-dao-truong-sinh");
+    const storyId = detail.data.id;
+    assert.equal(
+      (await call("/admin/users", "GET", undefined, {}, false)).status,
+      401,
+    );
+    r = await call(`/library/${storyId}`, "PUT", {
+      shelf: "FAVORITE",
+      followed: true,
+    });
+    assert.equal(r.status, 200);
+    assert.equal(
+      (await call("/library")).data.find((x: any) => x.storyId === storyId)
+        .followed,
+      true,
+    );
+    r = await call("/reading/van-dao-truong-sinh/6", "PUT", {
+      position: 0.62,
+      finished: false,
+    });
+    assert.equal(r.status, 200);
+    assert.equal(
+      (await call("/stories/van-dao-truong-sinh/chapters/6")).data.position,
+      0.62,
+    );
+    assert.equal(
+      (
+        await call("/reading/van-dao-truong-sinh/7", "PUT", {
+          position: 1,
+          finished: true,
+        })
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await call("/reading/van-dao-truong-sinh/6", "PUT", {
+          position: 1.2,
+          finished: false,
+        })
+      ).status,
+      400,
+    );
+    const root = await call(`/stories/${storyId}/comments`, "POST", {
+      content: "Cảm nhận kiểm thử của độc giả.",
+    });
+    assert.equal(root.status, 201);
+    const reply = await call(`/stories/${storyId}/comments`, "POST", {
+      content: "Trả lời bình luận kiểm thử.",
+      parentId: root.data.id,
+    });
+    assert.equal(reply.status, 201);
+    assert.equal(
+      (
+        await call(`/stories/${storyId}/comments`, "POST", {
+          content: "Không lồng thêm một cấp.",
+          parentId: reply.data.id,
+        })
+      ).status,
+      404,
+    );
+    assert.equal(
+      (await call(`/comments/${root.data.id}`, "DELETE")).status,
+      200,
+    );
+    assert(
+      !(await call("/stories/van-dao-truong-sinh")).data.comments.some(
+        (c: any) => [root.data.id, reply.data.id].includes(c.id),
+      ),
+    );
+    const extra = detail.data.chapters.filter(
+      (c: any) => c.number === 7 || c.number === 8,
+    );
+    assert.equal(extra.length, 2);
+    const total = extra.reduce((n: number, c: any) => n + c.price, 0),
+      ids = extra.map((c: any) => c.id);
+    const beforeBatch = (await call("/auth/me")).data.balance;
+    assert.equal(
+      (
+        await call(
+          "/purchases/batch",
+          "POST",
+          { chapterIds: ids, expectedTotal: total + 1 },
+          { "Idempotency-Key": randomUUID() },
+        )
+      ).status,
+      409,
+    );
+    assert.equal((await call("/auth/me")).data.balance, beforeBatch);
+    const batchKey = randomUUID(),
+      payload = { chapterIds: [...ids, ids[0]], expectedTotal: total };
+    r = await call("/purchases/batch", "POST", payload, {
+      "Idempotency-Key": batchKey,
+    });
+    assert.equal(r.status, 201, JSON.stringify(r));
+    assert.equal(r.data.count, 2);
+    r = await call("/purchases/batch", "POST", payload, {
+      "Idempotency-Key": batchKey,
+    });
+    assert.equal(r.data.alreadyPurchased, true);
+    assert.equal((await call("/auth/me")).data.balance, beforeBatch - total);
+    assert.equal(
+      (
+        await call(
+          "/purchases/batch",
+          "POST",
+          { ...payload, expectedTotal: 0 },
+          { "Idempotency-Key": batchKey },
+        )
+      ).status,
+      409,
+    );
+    assert(
+      (await call("/purchases")).data.some((p: any) => p.chapterId === ids[0]),
+    );
     const oldRefresh = cookies.get("tt_refresh")!;
     r = await call("/auth/refresh", "POST");
     assert.equal(r.status, 201);
@@ -226,9 +341,8 @@ test(
 );
 
 import { PrismaClient } from "@prisma/client";
-import { totp } from "../src/security";
 test(
-  "Author/admin integration: mandatory 2FA, story approval, free chapters and IDOR",
+  "Author/admin integration: story approval, free chapters and IDOR",
   { skip: !base || !process.env.DATABASE_URL },
   async () => {
     const db = new PrismaClient();
@@ -270,15 +384,6 @@ test(
         where: { id: user.id },
         data: { roles: ["READER", "AUTHOR", "ADMIN"] },
       });
-      r = await call("/admin/users");
-      assert.equal(r.status, 403, "privileged account must enroll MFA");
-      r = await call("/auth/2fa/setup", "POST", { password });
-      assert.equal(r.status, 201, JSON.stringify(r));
-      const secret = r.data.secret;
-      r = await call("/auth/2fa/enable", "POST", {
-        code: totp(secret, Math.floor(Date.now() / 30000)),
-      });
-      assert.equal(r.status, 201);
       r = await call("/admin/users");
       assert.equal(r.status, 200);
       r = await call("/author/stories", "POST", {
@@ -330,6 +435,81 @@ test(
         r.status,
         404,
         "authors cannot access another author draft/editor",
+      );
+      const draft = await call(`/author/stories/${storyId}/drafts`, "POST");
+      assert.equal(draft.status, 201);
+      const draftBody = {
+        title: "Chương nháp kiểm thử",
+        content: "Nội dung nháp riêng tư ".repeat(50),
+        isFree: true,
+        price: 0,
+        scheduledAt: new Date(Date.now() + 3600000).toISOString(),
+        expectedUpdatedAt: draft.data.updatedAt,
+        expectedRevision: draft.data.revision,
+      };
+      const savedDraft = await call(
+        `/author/drafts/${draft.data.id}`,
+        "PUT",
+        draftBody,
+      );
+      assert.equal(savedDraft.status, 200);
+      assert.equal(savedDraft.data.status, "SCHEDULED");
+      assert.equal(
+        (await call(`/author/drafts/${draft.data.id}`, "PUT", draftBody))
+          .status,
+        409,
+        "stale draft cannot overwrite newer content",
+      );
+      const draftPublicStory = await db.story.findUniqueOrThrow({
+        where: { id: storyId },
+      });
+      assert.equal(
+        (await call(`/stories/${draftPublicStory.slug}`)).data.chapters.length,
+        1,
+        "scheduled draft is absent from public chapters",
+      );
+      const follower = await db.user.create({
+        data: {
+          email: `integration-follower-${randomUUID()}@example.invalid`,
+          name: "Follower test",
+          passwordHash: user.passwordHash,
+          emailVerified: true,
+          wallet: { create: {} },
+        },
+      });
+      await db.bookmark.create({
+        data: { userId: follower.id, storyId, followed: true },
+      });
+      const published = await Promise.all([
+        call(`/author/drafts/${draft.data.id}/publish`, "POST"),
+        call(`/author/drafts/${draft.data.id}/publish`, "POST"),
+      ]);
+      for (const result of published)
+        assert.equal(result.status, 201, JSON.stringify(result));
+      assert.equal(published[0].data.id, published[1].data.id);
+      assert.equal(
+        await db.chapter.count({ where: { storyId } }),
+        2,
+        "concurrent draft publication creates one chapter",
+      );
+      assert.equal(
+        await db.notification.count({ where: { userId: follower.id } }),
+        1,
+        "follower receives one notification",
+      );
+      assert.equal(
+        (
+          await call(`/author/drafts/${draft.data.id}`, "PUT", {
+            ...draftBody,
+            expectedUpdatedAt: savedDraft.data.updatedAt,
+            expectedRevision: savedDraft.data.revision,
+          })
+        ).status,
+        404,
+      );
+      assert.equal(
+        (await call("/author/stories/story-1/drafts", "POST")).status,
+        404,
       );
       r = await call("/author/payouts", "POST");
       assert.equal(r.status, 400, "zero earnings cannot be withdrawn");

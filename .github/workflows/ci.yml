@@ -21,7 +21,6 @@ jobs:
       DATABASE_URL: postgresql://tientruyen:test-only-password@localhost:5432/tientruyen
       REDIS_URL: redis://localhost:6379
       APP_ORIGIN: http://127.0.0.1:3000
-      TOTP_ENCRYPTION_KEY: ci-only-encryption-key-32-characters
       DEV_TOPUP_ENABLED: "true"
       PAYMENT_WEBHOOK_SECRET: ci-only-webhook-secret-32-characters
     steps:

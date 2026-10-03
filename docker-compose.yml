@@ -48,8 +48,19 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD:-change-local-redis-password}@redis:6379
       JWT_SECRET: ${JWT_SECRET:-development-only-change-this-secret-32chars}
       PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:-development-webhook-secret-32-characters}
-      APP_ORIGIN: http://localhost:3000
-      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:-development-totp-encryption-key-32characters}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-local}
+      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID:-}
+      PAYOS_API_KEY: ${PAYOS_API_KEY:-}
+      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-}
+      FACEBOOK_GRAPH_VERSION: ${FACEBOOK_GRAPH_VERSION:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_VERIFY_SERVICE_SID: ${TWILIO_VERIFY_SERVICE_SID:-}
       SMTP_URL: ${SMTP_URL:-}
       MAIL_FROM: ${MAIL_FROM:-noreply@example.invalid}
       DEV_TOPUP_ENABLED: ${DEV_TOPUP_ENABLED:-false}

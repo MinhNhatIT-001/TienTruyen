@@ -3,7 +3,6 @@ import { PrismaClient } from "@prisma/client";
 import * as argon from "argon2";
 import { randomBytes } from "crypto";
 import { writeFile, access } from "fs/promises";
-import { base32, encrypt } from "./security";
 const db = new PrismaClient();
 async function main() {
   if (
@@ -57,14 +56,9 @@ async function main() {
   const rows = await Promise.all(
     fixtures.map(async (f) => {
       const password = `TT-${randomBytes(15).toString("base64url")}!`;
-      const mfa =
-        f.roles.includes("ADMIN") || f.roles.includes("AUTHOR")
-          ? base32(randomBytes(20))
-          : undefined;
       return {
         ...f,
         password,
-        mfa,
         passwordHash: await argon.hash(password, { type: argon.argon2id }),
       };
     }),
@@ -81,7 +75,6 @@ async function main() {
             passwordHash: row.passwordHash,
             emailVerified: true,
             totalTopupVnd: row.coins * 100,
-            twoFactorSecret: row.mfa ? encrypt(row.mfa) : null,
             wallet: { create: { balance: row.coins } },
           },
         });
@@ -129,19 +122,13 @@ async function main() {
     "",
     "Đăng nhập: http://localhost:3000/dang-nhap",
     "",
-    "Admin và tác giả đã bật 2FA. Thêm khóa bên dưới vào Google Authenticator, Microsoft Authenticator hoặc ứng dụng TOTP; nhập mã 6 số khi đăng nhập. Đừng chia sẻ file này.",
+    "Đăng nhập bằng email và mật khẩu. Đừng chia sẻ file này.",
     "",
     ...rows.flatMap((r) => [
       `## ${r.name}`,
       `- Email: ${r.email}`,
       `- Mật khẩu: ${r.password}`,
       `- Hồng Ngọc ban đầu: ${r.coins} HN (tiền thử)`,
-      ...(r.mfa
-        ? [
-            `- Khóa 2FA: ${r.mfa}`,
-            `- Issuer: TienTruyen; SHA1, 6 số, chu kỳ 30 giây.`,
-          ]
-        : []),
       "",
     ]),
   ].join("\n");

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./ui-theme.css";
+import "./ui-polish.css";
 import { AppProvider, Header, Footer } from "../components/shell";
 export const metadata: Metadata = {
   title: {
@@ -15,8 +17,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <html lang="vi">
       <body>
         <AppProvider>
+          <a className="skip-content" href="#page-content">
+            Đến nội dung chính
+          </a>
           <Header />
-          {children}
+          <div id="page-content" tabIndex={-1}>
+            {children}
+          </div>
           <Footer />
         </AppProvider>
       </body>

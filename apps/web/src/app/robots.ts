@@ -13,6 +13,8 @@ export default function robots(): MetadataRoute.Robots {
         "/nap-hong-ngoc",
         "/lich-su",
         "/tu-truyen",
+        "/thong-bao",
+        "/chuong-da-mua",
         "/dat-lai-mat-khau",
         "/xac-minh",
       ],
