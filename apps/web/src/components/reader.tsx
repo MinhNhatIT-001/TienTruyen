@@ -749,16 +749,10 @@ export function Reader({
         </div>
       )}
       <article className="reader-article">
-        <span className="eyebrow">
-          {story?.title} · CHƯƠNG {number}
-        </span>
-        <h1>{chapter?.title || "Đang mở trang sách…"}</h1>
-        <p className="reader-meta">
-          {chapter?.content
-            ? `${Math.max(1, Math.ceil(chapter.content.trim().split(/\s+/u).length / 220))} phút đọc · `
-            : ""}
-          Chương {number}
-        </p>
+        <Link className="reader-story-name" href={`/truyen/${slug}`}>
+          {story?.title}
+        </Link>
+        <h1>{chapter ? `Chương ${number}: ${chapter.title}` : "Đang mở trang sách…"}</h1>
         <div className="reader-ornament">— ✦ —</div>
         {demo && (
           <p className="demo-note">
@@ -777,7 +771,7 @@ export function Reader({
           </div>
         ) : chapter?.content ? (
           <div className="reader-prose">
-            {chapter.content.split("\n\n").map((p, i) => (
+            {chapter.content.split("\n\n").filter((p, i) => i !== 0 || p.trim() !== `${story?.title} — Chương ${number}`).map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>

@@ -56,9 +56,10 @@ await check("/api/admin/summary", async (r) =>
 await check("/api/wallet/orders", async (r) =>
   assert([401, 403].includes(r.status), "Orders must reject guests."),
 );
-if (stories[0]) {
+const sample = stories.find((story) => story.slug === "van-dao-truong-sinh") || stories[0];
+if (sample) {
   await check(
-    `/api/stories/${encodeURIComponent(stories[0].slug)}`,
+    `/api/stories/${encodeURIComponent(sample.slug)}`,
     async (r) => {
       assert.equal(r.status, 200);
       const story = await r.json();

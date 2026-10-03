@@ -1,3 +1,6 @@
+"use client";
+import { useState } from "react";
+import { normalizeSearch } from "../lib/search";
 import Link from "next/link";
 import {
   BookOpen,
@@ -6,6 +9,11 @@ import {
   ArrowRight,
   Diamond,
   Feather,
+  Search,
+  ChevronDown,
+  MessageCircle,
+  LifeBuoy,
+  X,
 } from "lucide-react";
 const contact = "tientruyenweb@gmail.com";
 const pages: Record<string, { title: string; subtitle: string }> = {
@@ -59,6 +67,7 @@ const faqs = [
 ];
 export function HelpPage({ section }: { section: string }) {
   const page = pages[section] || pages["ho-tro"];
+  if (section === "ho-tro") return <SupportCenter />;
   return (
     <main className="container page help-page">
       <div className="page-intro">
@@ -105,6 +114,11 @@ export function HelpPage({ section }: { section: string }) {
               ],
               [
                 Feather,
+                Search,
+                ChevronDown,
+                MessageCircle,
+                LifeBuoy,
+                X,
                 "Không gian sáng tác",
                 "Viết nháp, xem trước, quản lý chương và theo dõi độc giả.",
               ],
@@ -122,36 +136,6 @@ export function HelpPage({ section }: { section: string }) {
             ))}
           </div>
         </>
-      ) : section === "ho-tro" ? (
-        <div className="help-layout">
-          <section className="panel help-faq">
-            <h2>Câu hỏi thường gặp</h2>
-            {faqs.map(([question, answer]) => (
-              <details key={question}>
-                <summary>{question}</summary>
-                <p>{answer}</p>
-              </details>
-            ))}
-          </section>
-          <aside className="panel help-contact">
-            <Mail size={26} />
-            <h2>Gửi yêu cầu hỗ trợ</h2>
-            <p>
-              Gửi đường dẫn trang, mã đơn nếu có và mô tả sự cố để chúng mình
-              kiểm tra.
-            </p>
-            <a
-              className="btn primary"
-              href={`mailto:${contact}?subject=${encodeURIComponent("Hỗ trợ Tiên Truyện")}`}
-            >
-              Liên hệ qua email <ArrowRight size={16} />
-            </a>
-            <p className="help-email">{contact}</p>
-            <small>
-              Không gửi mật khẩu, mã OTP hay thông tin thẻ ngân hàng.
-            </small>
-          </aside>
-        </div>
       ) : (
         <article className="panel policy-content">
           <ShieldCheck size={28} />
@@ -235,6 +219,161 @@ export function HelpPage({ section }: { section: string }) {
           )}
         </article>
       )}
+    </main>
+  );
+}
+
+const helpTopics = [
+  {
+    id: "read",
+    icon: BookOpen,
+    title: "Đọc truyện & tài khoản",
+    text: "Tủ truyện, vị trí đọc và hồ sơ",
+    questions: [3, 6],
+  },
+  {
+    id: "wallet",
+    icon: Diamond,
+    title: "Ví & Hồng Ngọc",
+    text: "Nạp thử, QR và lịch sử giao dịch",
+    questions: [0, 1, 2],
+  },
+  {
+    id: "write",
+    icon: Feather,
+    title: "Dành cho tác giả",
+    text: "Đăng ký, bản nháp và xuất bản",
+    questions: [4, 5],
+  },
+];
+function SupportCenter() {
+  const [query, setQuery] = useState("");
+  const [topic, setTopic] = useState("all");
+  const selected = helpTopics.find((item) => item.id === topic);
+  const questions = faqs
+    .map(([question, answer], index) => ({ question, answer, index }))
+    .filter(
+      (item) =>
+        (!selected || selected.questions.includes(item.index)) &&
+        normalizeSearch(`${item.question} ${item.answer}`).includes(
+          normalizeSearch(query.trim()),
+        ),
+    );
+  return (
+    <main className="container page support-center">
+      <header className="support-hero">
+        <span className="support-eyebrow">
+          <LifeBuoy size={15} /> TRUNG TÂM HỖ TRỢ
+        </span>
+        <h1>Để hành trình đọc luôn trọn vẹn.</h1>
+        <p>Tìm lời giải nhanh, hoặc gửi lời nhắn cho Tiên Truyện.</p>
+        <div className="support-search">
+          <Search size={20} aria-hidden="true" />
+          <input
+            aria-label="Tìm câu hỏi hỗ trợ"
+            type="search"
+            placeholder="Bạn cần hỗ trợ điều gì?"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          {query && (
+            <button
+              aria-label="Xóa tìm kiếm hỗ trợ"
+              onClick={() => setQuery("")}
+            >
+              <X size={17} />
+            </button>
+          )}
+        </div>
+      </header>
+      <div className="support-topics" role="group" aria-label="Chủ đề hỗ trợ">
+        {helpTopics.map(({ id, icon: Icon, title, text }) => (
+          <button
+            key={id}
+            className={`support-topic ${topic === id ? "selected" : ""}`}
+            aria-pressed={topic === id}
+            onClick={() => setTopic(topic === id ? "all" : id)}
+          >
+            <span className="support-topic-icon">
+              <Icon size={22} />
+            </span>
+            <span>
+              <strong>{title}</strong>
+              <small>{text}</small>
+            </span>
+            <ArrowRight size={17} className="support-topic-arrow" />
+          </button>
+        ))}
+      </div>
+      <div className="support-body">
+        <section className="support-questions" aria-label="Câu hỏi hỗ trợ">
+          <div className="support-section-heading">
+            <div>
+              <span className="support-kicker">GIẢI ĐÁP NHANH</span>
+              <h2>{selected?.title || "Câu hỏi thường gặp"}</h2>
+            </div>
+            {selected && (
+              <button className="text-button" onClick={() => setTopic("all")}>
+                Tất cả chủ đề
+              </button>
+            )}
+          </div>
+          <div className="support-accordion">
+            {questions.map(({ question, answer, index }) => (
+              <details key={index}>
+                <summary>
+                  <span>{question}</span>
+                  <ChevronDown size={18} aria-hidden="true" />
+                </summary>
+                <p>{answer}</p>
+              </details>
+            ))}
+          </div>
+          <p className="support-result-count" role="status">
+            {questions.length
+              ? `${questions.length} câu hỏi phù hợp`
+              : "Chưa có câu hỏi phù hợp. Thử từ khóa khác hoặc gửi email cho chúng mình."}
+          </p>
+        </section>
+        <aside className="support-aside">
+          <section className="support-contact-card">
+            <span className="support-contact-icon">
+              <MessageCircle size={24} />
+            </span>
+            <h2>Vẫn cần một lời giải?</h2>
+            <p>
+              Chúng mình luôn lắng nghe. Gửi mô tả và mã đơn nếu có để được hỗ
+              trợ.
+            </p>
+            <a
+              className="btn primary"
+              href={`mailto:${contact}?subject=${encodeURIComponent("Hỗ trợ Tiên Truyện")}`}
+            >
+              <Mail size={17} /> Gửi email hỗ trợ <ArrowRight size={16} />
+            </a>
+            <span className="support-email">{contact}</span>
+          </section>
+          <nav className="support-shortcuts" aria-label="Truy cập nhanh">
+            <h3>Góc của bạn</h3>
+            <Link href="/tai-khoan">
+              Hồ sơ & cài đặt <ArrowRight size={15} />
+            </Link>
+            <Link href="/lich-su-giao-dich">
+              Lịch sử giao dịch <ArrowRight size={15} />
+            </Link>
+            <Link href="/tu-truyen">
+              Tủ truyện cá nhân <ArrowRight size={15} />
+            </Link>
+          </nav>
+        </aside>
+      </div>
+      <nav className="support-info-links" aria-label="Thông tin Tiên Truyện">
+        <Link href="/gioi-thieu">Về Tiên Truyện</Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/dieu-khoan">Điều khoản sử dụng</Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/chinh-sach-bao-mat">Chính sách bảo mật</Link>
+      </nav>
     </main>
   );
 }
