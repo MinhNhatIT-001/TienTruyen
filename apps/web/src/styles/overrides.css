@@ -1300,3 +1300,26 @@ button {
     font-size: 26px;
   }
 }
+
+
+/* Original full-bleed artwork; book titles and authors remain outside covers. */
+.illustrated-cover {
+  container-type: inline-size;
+  background: #17241f;
+  color: #fff7e7;
+}
+.illustrated-cover .cover-artwork {
+  object-fit: cover;
+  z-index: 0;
+}
+.illustrated-cover::before {
+  z-index: 1;
+  opacity: 1;
+  background: linear-gradient(90deg, #0003, #0000 12%, #0000 88%, #0002);
+}
+.illustrated-cover::after {
+  z-index: 3;
+  inset: 7px;
+  opacity: 0.24;
+  border-color: #efe0b2;
+}
