@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validJobAuthorization } from "../src/job-auth";
+import { validJobAuthorization } from "../src/modules/jobs/job-auth";
 
 test("scheduled jobs require a configured strong secret and exact Bearer token", () => {
   const secret = "a".repeat(40);

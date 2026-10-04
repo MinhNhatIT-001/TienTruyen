@@ -1,2 +1,2 @@
-import { Home } from "../components/catalog";
+import { Home } from "../features/catalog/home";
 export default Home;

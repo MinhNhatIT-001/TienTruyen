@@ -31,7 +31,7 @@ jobs:
       - run: npm install -g pnpm@11.19.0
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate && pnpm db:migrate && pnpm db:seed
-      - run: pnpm typecheck && pnpm test && pnpm build
+      - run: pnpm typecheck && pnpm test && pnpm build && node scripts/checks/check-api-structure.cjs
       - name: Integration
         run: |
           node apps/api/dist/main.js > /tmp/tientruyen-api.log 2>&1 &

@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
-import { avatarGallery, randomAvatar, storeAvatar } from "../src/avatars";
+import { avatarGallery, randomAvatar, storeAvatar } from "../src/modules/users/avatar.service";
 test("random avatar always uses the local gallery", () => {
   for (let i = 0; i < 100; i++) assert(avatarGallery.includes(randomAvatar()));
 });

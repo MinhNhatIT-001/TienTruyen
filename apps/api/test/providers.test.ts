@@ -8,7 +8,7 @@ import {
   oauthUrl,
   oauthIdentity,
   payos,
-} from "../src/providers";
+} from "../src/integrations/providers";
 test("Vietnamese mobile numbers normalize to one identity", () => {
   assert.equal(normalizePhone("0912 345 678"), "+84912345678");
   assert.equal(normalizePhone("+84 912 345 678"), "+84912345678");

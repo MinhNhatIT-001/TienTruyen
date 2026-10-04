@@ -46,7 +46,7 @@ mỗi 5 phút hoặc thường xuyên hơn trên gói có hỗ trợ. Chưa tạ
 không hết hạn khi job chạy quá 5 phút. Việc đăng chương/thanh toán vẫn kiểm tra
 trạng thái và dùng transaction để tránh phát hành/cộng số dư hai lần.
 
-Kiểm tra biến bằng node scripts/check-cloud.mjs sau khi đã cấp env an toàn.
+Kiểm tra biến bằng node scripts/checks/check-cloud.mjs sau khi đã cấp env an toàn.
 Script không in giá trị khóa. Cần kiểm tra kết nối thật sau bước này.
 
 Tài liệu: https://vercel.com/docs/services,

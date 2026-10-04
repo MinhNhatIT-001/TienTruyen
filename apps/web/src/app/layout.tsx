@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import "./ui-theme.css";
-import "./ui-polish.css";
-import { AppProvider, Header, Footer } from "../components/shell";
+import "../styles/base.css";
+import "../styles/theme.css";
+import "../styles/overrides.css";
+import { AppProvider, Header, Footer } from "../components/layout/app-shell";
 export const metadata: Metadata = {
   title: {
     default: "Tiên Truyện — Một trang sách, vạn dặm nhân gian",

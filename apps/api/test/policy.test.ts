@@ -8,7 +8,7 @@ import {
   wordCount,
   levelFor,
   safeNext,
-} from "../src/policy";
+} from "../src/common/policy";
 test("paid chapter is unavailable to guests and non-purchasers", () => {
   assert.equal(canRead(false, false), false);
   assert.equal(canRead(false, true), true);

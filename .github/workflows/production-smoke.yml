@@ -14,6 +14,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: node scripts/check-vercel.mjs
+      - run: node scripts/checks/check-vercel.mjs
         env:
           VERCEL_TEST_ORIGIN: https://tientruyen.vercel.app

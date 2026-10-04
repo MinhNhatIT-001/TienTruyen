@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { paymentReviewReason } from "../src/payment-policy";
+import { paymentReviewReason } from "../src/modules/wallet/payment-policy";
 test("payment review separates unpaid, correct, partial, excessive and late payments", () => {
   const now = new Date("2026-10-03T00:00:00Z"),
     future = new Date(now.getTime() + 60000),

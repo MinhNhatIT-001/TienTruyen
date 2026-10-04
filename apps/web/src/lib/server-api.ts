@@ -5,10 +5,10 @@ export const siteOrigin = (
 ).replace(/\/$/, "");
 export async function publicApi<T>(path: string): Promise<T | null> {
   try {
-    const response = await fetch(
-      apiUrl(path),
-      { cache: "no-store", signal: AbortSignal.timeout(5000) },
-    );
+    const response = await fetch(apiUrl(path), {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
     return response.ok ? ((await response.json()) as T) : null;
   } catch {
     return null;

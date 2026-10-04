@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
-import { payosSignature } from "../src/providers";
+import { payosSignature } from "../src/integrations/providers";
 
 const base = process.env.PAYOS_INTEGRATION_URL;
 test(
