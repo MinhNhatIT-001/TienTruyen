@@ -38,3 +38,12 @@ Nguồn đối chiếu tên tác phẩm và tác giả:
 
 - [Tương Dạ — Qidian](https://book.qidian.com/info/2083259/)
 - [Quang Âm Chi Ngoại — giới thiệu từ nền tảng thuộc hệ thống của nhà xuất bản](https://www.hongxiu.com/baike/1pcbn19zp4eu0)
+
+
+Điều chỉnh theo lựa chọn của chủ website: đợt bổ sung gồm Phàm Nhân Tu Tiên và 10 bộ nổi tiếng: Nhất Niệm Vĩnh Hằng, Cầu Ma, Đại Phụng Đả Canh Nhân, Khánh Dư Niên, Tương Dạ, Đấu La Đại Lục, Tuyệt Thế Đường Môn, Bàn Long, Quỷ Bí Chi Chủ và Sưu Thần Ký. Hai mục vừa nhập Tiên Giới Thiên và Quang Âm Chi Ngoại được ẩn khỏi danh mục công khai, không xóa khỏi database.
+
+Sưu Thần Ký ở đây là tiểu thuyết của Thụ Hạ Dã Hồ, không phải tác phẩm chí quái cổ của Can Bảo. Không khẳng định tác phẩm đứng thứ hạng cụ thể trên Qidian: tác giả cho biết tác phẩm khởi đăng tại Huyễn Kiếm Thư Minh.
+
+- [Quỷ Bí Chi Chủ — Qidian](https://book.qidian.com/fansrank/1010868264)
+- [Thụ Hạ Dã Hồ kể về quá trình viết Sưu Thần Ký](https://image.chinawriter.com.cn/n1/2022/0325/c404024-32384039.html)
+- [Sưu Thần Ký — thư mục xuất bản](https://books.google.com/books/about/搜神记.html?id=dS83xQEACAAJ)

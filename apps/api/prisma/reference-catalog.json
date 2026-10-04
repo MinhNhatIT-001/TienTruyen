@@ -135,15 +135,6 @@
     "progress": "Chưa có chương"
   },
   {
-    "slug": "pham-nhan-tu-tien-tien-gioi-thien",
-    "title": "Phàm Nhân Tu Tiên Chi Tiên Giới Thiên",
-    "penName": "Vong Ngữ",
-    "genre": "Tiên hiệp",
-    "cover": "ocean",
-    "description": "Sau khi phi thăng, Hàn Lập đối diện một biến cố khiến ký ức và tu vi bị tổn hại. Trong thế giới tiên nhân với những pháp tắc mới, chàng bắt đầu hành trình tìm lại quá khứ và khám phá các thế lực đang chi phối con đường trường sinh.",
-    "progress": "Chưa có chương"
-  },
-  {
     "slug": "nhat-niem-vinh-hang",
     "title": "Nhất Niệm Vĩnh Hằng",
     "penName": "Nhĩ Căn",
@@ -159,15 +150,6 @@
     "genre": "Tiên hiệp",
     "cover": "slate",
     "description": "Tô Minh lớn lên trong một bộ lạc và mang theo những câu hỏi về thân thế của mình. Qua mất mát và những lần lựa chọn, chàng lần theo sự thật bị che giấu, tìm ý nghĩa của tự do và con đường thoát khỏi số phận do người khác sắp đặt.",
-    "progress": "Chưa có chương"
-  },
-  {
-    "slug": "quang-am-chi-ngoai",
-    "title": "Quang Âm Chi Ngoại",
-    "penName": "Nhĩ Căn",
-    "genre": "Tiên hiệp",
-    "cover": "gold",
-    "description": "Hứa Thanh trưởng thành trong một thế giới khắc nghiệt, nơi nguy hiểm đến từ cả môi trường lẫn lòng người. Từ mục tiêu sống sót, chàng từng bước học cách tu hành, tìm những người có thể tin tưởng và đối diện các bí mật vượt xa cuộc đời mình.",
     "progress": "Chưa có chương"
   },
   {
@@ -223,5 +205,23 @@
     "cover": "jade",
     "description": "Lâm Lôi xuất thân từ một gia tộc từng huy hoàng nhưng đang suy tàn. Chiếc nhẫn Bàn Long mở ra cơ hội học phép thuật, còn quyết tâm bảo vệ người thân dẫn chàng qua những cuộc chiến trên Ngọc Lan đại lục và hành trình khám phá các vị diện rộng lớn.",
     "progress": "Chưa có chương"
+  },
+  {
+    "slug": "quy-bi-chi-chu",
+    "title": "Quỷ Bí Chi Chủ",
+    "penName": "Ái Tiềm Thủy Đích Ô Tặc",
+    "genre": "Huyền huyễn",
+    "cover": "slate",
+    "progress": "Chưa có chương",
+    "description": "Chu Minh Thụy tỉnh dậy trong thân phận Klein Moretti tại một thế giới gợi nhớ thời đại công nghiệp, nơi máy móc cùng tồn tại với nghi lễ và sức mạnh siêu nhiên. Từ những vụ việc kỳ lạ và một hội nhóm bí mật, anh lần theo con đường phi phàm để tìm lời giải cho thân thế, lịch sử và cơ hội trở về nhà."
+  },
+  {
+    "slug": "suu-than-ky",
+    "title": "Sưu Thần Ký",
+    "penName": "Thụ Hạ Dã Hồ",
+    "genre": "Huyền huyễn",
+    "cover": "gold",
+    "progress": "Chưa có chương",
+    "description": "Trong Đại Hoang của thời đại thần thoại, thiếu niên Thác Bạt Dã nhận một lời gửi gắm từ Thần Nông và bước vào vòng xoáy tranh chấp giữa các tộc. Những cuộc gặp gỡ, tình bạn và tình yêu dẫn chàng qua núi sông rộng lớn, giữa linh thú, pháp thuật và những lựa chọn có thể thay đổi cục diện thiên hạ."
   }
 ]
