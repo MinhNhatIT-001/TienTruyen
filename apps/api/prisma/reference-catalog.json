@@ -124,5 +124,104 @@
     "cover": "slate",
     "description": "Trên Trái Đất bị biến đổi bởi đại dịch và quái thú, La Phong rèn luyện để trở thành võ giả. Từ cuộc chiến bảo vệ con người, hành trình của anh mở rộng ra vũ trụ với những nền văn minh và thử thách vượt xa tưởng tượng.",
     "progress": "Chưa có chương"
+  },
+  {
+    "slug": "pham-nhan-tu-tien",
+    "title": "Phàm Nhân Tu Tiên",
+    "penName": "Vong Ngữ",
+    "genre": "Tiên hiệp",
+    "cover": "jade",
+    "description": "Hàn Lập, một thiếu niên miền núi với tư chất bình thường, bước vào con đường tu tiên từ những cơ duyên nhỏ bé. Cẩn trọng, kiên trì và biết tính toán, chàng tìm cách tồn tại giữa tranh đoạt tài nguyên, từng bước vượt qua giới hạn của một phàm nhân.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "pham-nhan-tu-tien-tien-gioi-thien",
+    "title": "Phàm Nhân Tu Tiên Chi Tiên Giới Thiên",
+    "penName": "Vong Ngữ",
+    "genre": "Tiên hiệp",
+    "cover": "ocean",
+    "description": "Sau khi phi thăng, Hàn Lập đối diện một biến cố khiến ký ức và tu vi bị tổn hại. Trong thế giới tiên nhân với những pháp tắc mới, chàng bắt đầu hành trình tìm lại quá khứ và khám phá các thế lực đang chi phối con đường trường sinh.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "nhat-niem-vinh-hang",
+    "title": "Nhất Niệm Vĩnh Hằng",
+    "penName": "Nhĩ Căn",
+    "genre": "Tiên hiệp",
+    "cover": "rose",
+    "description": "Bạch Tiểu Thuần sợ chết nhưng lại khao khát sống mãi, vì vậy quyết tâm tìm đến tiên môn. Những màn luyện đan và rắc rối do cậu gây ra mở đầu một hành trình vừa hài hước vừa nhiều thử thách, nơi sự gắn bó với bằng hữu dần trở thành động lực lớn hơn nỗi sợ của bản thân.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "cau-ma",
+    "title": "Cầu Ma",
+    "penName": "Nhĩ Căn",
+    "genre": "Tiên hiệp",
+    "cover": "slate",
+    "description": "Tô Minh lớn lên trong một bộ lạc và mang theo những câu hỏi về thân thế của mình. Qua mất mát và những lần lựa chọn, chàng lần theo sự thật bị che giấu, tìm ý nghĩa của tự do và con đường thoát khỏi số phận do người khác sắp đặt.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "quang-am-chi-ngoai",
+    "title": "Quang Âm Chi Ngoại",
+    "penName": "Nhĩ Căn",
+    "genre": "Tiên hiệp",
+    "cover": "gold",
+    "description": "Hứa Thanh trưởng thành trong một thế giới khắc nghiệt, nơi nguy hiểm đến từ cả môi trường lẫn lòng người. Từ mục tiêu sống sót, chàng từng bước học cách tu hành, tìm những người có thể tin tưởng và đối diện các bí mật vượt xa cuộc đời mình.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "dai-phung-da-canh-nhan",
+    "title": "Đại Phụng Đả Canh Nhân",
+    "penName": "Mại Báo Tiểu Lang Quân",
+    "genre": "Tiên hiệp",
+    "cover": "jade",
+    "description": "Hứa Thất An tỉnh lại trong ngục ở Đại Phụng và phải dùng khả năng suy luận để cứu mình cùng gia đình. Khi gia nhập đội ngũ đả canh nhân, những vụ án kỳ lạ kéo chàng vào cuộc tranh chấp giữa triều đình, giới tu hành và các thế lực ẩn sau kinh thành.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "khanh-du-nien",
+    "title": "Khánh Dư Niên",
+    "penName": "Miêu Nị",
+    "genre": "Cổ đại",
+    "cover": "gold",
+    "description": "Phạm Nhàn lớn lên với ký ức khác thường và một thân thế nhiều bí mật. Bước vào kinh đô, chàng phải cân bằng tình thân, lý tưởng và quyền lực giữa những cuộc đấu trí của triều đình, đồng thời tìm hiểu di sản mà mẹ mình để lại.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "tuong-da",
+    "title": "Tương Dạ",
+    "penName": "Miêu Nị",
+    "genre": "Huyền huyễn",
+    "cover": "slate",
+    "description": "Ninh Khuyết cùng Tang Tang đến Trường An, mang theo quá khứ đau thương và mong muốn đổi đời. Việc bước vào thư viện mở ra con đường tu hành, nhưng những bí mật về thế giới và người bạn đồng hành khiến chàng phải đối diện cả niềm tin lẫn vận mệnh.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "dau-la-dai-luc",
+    "title": "Đấu La Đại Lục",
+    "penName": "Đường Gia Tam Thiếu",
+    "genre": "Huyền huyễn",
+    "cover": "ocean",
+    "description": "Đường Tam mang kiến thức của Đường môn đến một thế giới nơi võ hồn quyết định con đường trưởng thành. Cùng những người bạn tại học viện Sử Lai Khắc, chàng rèn luyện, học cách phối hợp và khám phá những bí mật gắn liền với gia đình mình.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "tuyet-the-duong-mon",
+    "title": "Đấu La Đại Lục II: Tuyệt Thế Đường Môn",
+    "penName": "Đường Gia Tam Thiếu",
+    "genre": "Huyền huyễn",
+    "cover": "rose",
+    "description": "Nhiều năm sau thời Đường Tam, Đường môn suy yếu trong lúc hồn đạo khí phát triển mạnh. Hoắc Vũ Hạo bắt đầu từ hoàn cảnh khó khăn, tìm được cơ hội ở Sử Lai Khắc và cùng đồng đội khám phá cách kết hợp võ hồn với những thay đổi của thời đại.",
+    "progress": "Chưa có chương"
+  },
+  {
+    "slug": "ban-long",
+    "title": "Bàn Long",
+    "penName": "Ngã Cật Tây Hồng Thị",
+    "genre": "Huyền huyễn",
+    "cover": "jade",
+    "description": "Lâm Lôi xuất thân từ một gia tộc từng huy hoàng nhưng đang suy tàn. Chiếc nhẫn Bàn Long mở ra cơ hội học phép thuật, còn quyết tâm bảo vệ người thân dẫn chàng qua những cuộc chiến trên Ngọc Lan đại lục và hành trình khám phá các vị diện rộng lớn.",
+    "progress": "Chưa có chương"
   }
 ]
