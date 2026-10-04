@@ -18,6 +18,7 @@ export function Cover({ story, large = false }: { story: Story; large?: boolean 
           src={artwork}
           alt=""
           fill
+          unoptimized
           sizes={large ? "(max-width: 600px) 50vw, 280px" : "(max-width: 600px) 40vw, (max-width: 1000px) 22vw, 180px"}
           loading={large ? "eager" : "lazy"}
         />
