@@ -19,7 +19,7 @@ export function Cover({
       <div className="cover-mountain mountain-back" />
       <div className="cover-mountain mountain-front" />
       <div className="cover-mist" />
-      <span className="cover-series">TIÊN TRUYỆN · ORIGINAL</span>
+      <span className="cover-series">THƯ VIỆN TIÊN TRUYỆN</span>
       <span className="cover-title">{story.title}</span>
       <span className="cover-author">{story.penName}</span>
       <span className="cover-seal">仙</span>

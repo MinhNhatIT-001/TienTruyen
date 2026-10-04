@@ -79,9 +79,9 @@ export function Home() {
             </div>
             <Link
               className="btn spotlight-cta"
-              href={`/truyen/${featured.slug}/1`}
+              href={`/truyen/${featured.slug}${featured.chapterCount > 0 ? "/1" : ""}`}
             >
-              <BookOpen size={17} /> Bắt đầu đọc <ArrowUpRight size={17} />
+              <BookOpen size={17} /> {featured.chapterCount > 0 ? "Bắt đầu đọc" : "Xem giới thiệu"} <ArrowUpRight size={17} />
             </Link>
           </div>
           <Link

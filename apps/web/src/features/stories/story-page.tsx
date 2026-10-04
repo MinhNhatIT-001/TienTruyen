@@ -111,13 +111,15 @@ export function StoryPage({
             <span>
               <strong>{story.chapterCount}</strong> chương
             </span>
-            <span>5 chương đầu miễn phí</span>
+            {story.chapterCount > 0 && <span>5 chương đầu miễn phí</span>}
           </div>
           <p className="synopsis">{story.description}</p>
           <div className="hero-buttons">
-            <Link className="btn primary" href={`/truyen/${slug}/1`}>
-              <BookOpen size={18} /> Bắt đầu đọc
-            </Link>
+            {story.chapterCount > 0 ? (
+              <Link className="btn primary" href={`/truyen/${slug}/1`}>
+                <BookOpen size={18} /> Bắt đầu đọc
+              </Link>
+            ) : <span className="notice">Hiện chỉ có thông tin giới thiệu truyện.</span>}
             <button
               className="btn secondary"
               onClick={async () => {
