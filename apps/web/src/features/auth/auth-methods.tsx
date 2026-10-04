@@ -64,9 +64,10 @@ export function SocialLogin({ link = false }: { link?: boolean }) {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stop = useRef<(() => void) | null>(null);
   useEffect(
     () => () => {
-      if (timer.current) clearInterval(timer.current);
+      stop.current?.();
     },
     [],
   );
@@ -85,6 +86,36 @@ export function SocialLogin({ link = false }: { link?: boolean }) {
       "popup,width=520,height=680",
     );
     setBusy(true);
+    stop.current?.();
+    let channel: BroadcastChannel | null = null;
+    let completing = false;
+    const finish = async () => {
+      if (completing) return;
+      completing = true;
+      try {
+        await api("/auth/me", { cache: "no-store" }, false);
+        stop.current?.();
+        popup?.close();
+        window.location.assign(link ? "/tai-khoan" : "/");
+      } catch { completing = false; /* Require an authenticated session. */ }
+    };
+    const receive = () => { void finish(); };
+    const storage = (event: StorageEvent) => {
+      if (event.key === "tt-oauth-complete") receive();
+    };
+    if (typeof BroadcastChannel !== "undefined") {
+      channel = new BroadcastChannel("tt-oauth");
+      channel.onmessage = (event) => {
+        if (event.data === "complete") receive();
+      };
+    }
+    window.addEventListener("storage", storage);
+    stop.current = () => {
+      if (timer.current) clearInterval(timer.current);
+      timer.current = null;
+      channel?.close();
+      window.removeEventListener("storage", storage);
+    };
     try {
       const url = link
         ? (
@@ -100,19 +131,20 @@ export function SocialLogin({ link = false }: { link?: boolean }) {
       popup.location.href = url;
       const started = Date.now();
       timer.current = setInterval(() => {
-        if (popup.closed || Date.now() - started > 300000) {
-          if (timer.current) clearInterval(timer.current);
+        // A provider COOP policy can report closed while OAuth is still running.
+        // Release the button, but keep listening for the completion signal.
+        if (popup.closed) setBusy(false);
+        if (Date.now() - started > 300000) {
+          stop.current?.();
           setBusy(false);
           return;
         }
         try {
           if (popup.location.origin !== window.location.origin) return;
-          if (popup.location.pathname === "/tai-khoan") {
-            if (timer.current) clearInterval(timer.current);
-            popup.close();
-            window.location.assign(link ? "/tai-khoan" : "/");
+          if (popup.location.pathname === "/dang-nhap/hoan-tat") {
+            void finish();
           } else if (popup.location.pathname === "/dang-nhap") {
-            if (timer.current) clearInterval(timer.current);
+            stop.current?.();
             const issue = new URLSearchParams(popup.location.search).get(
               "authError",
             );
@@ -129,6 +161,7 @@ export function SocialLogin({ link = false }: { link?: boolean }) {
         }
       }, 500);
     } catch (e) {
+      stop.current?.();
       popup?.close();
       setError((e as Error).message);
       setBusy(false);

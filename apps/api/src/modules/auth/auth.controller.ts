@@ -332,7 +332,7 @@ export class AuthController {
       await session(u.id, req, res);
       await audit(u.id, p.linkUser ? "LINK_OAUTH" : "LOGIN_OAUTH");
       res.clearCookie(`tt_oauth_${provider}`, { path: "/" });
-      return res.redirect(`${origin}/tai-khoan`);
+      return res.redirect(`${origin}/dang-nhap/hoan-tat${p.linkUser ? "?link=1" : ""}`);
     } catch (e) {
       res.clearCookie(`tt_oauth_${provider}`, { path: "/" });
       const duplicate =
