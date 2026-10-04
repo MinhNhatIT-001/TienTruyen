@@ -10,6 +10,8 @@ import { genres } from "../../lib/types";
 
 import { useCatalog } from "./use-catalog";
 import { StoryCard } from "./story-card";
+const STORIES_PER_PAGE = 15;
+
 export function CatalogPage({
   initialGenre = "Tất cả",
   ranking = false,
@@ -121,6 +123,9 @@ export function CatalogPage({
         Date.parse(b.updatedAt || "1970-01-01") -
         Date.parse(a.updatedAt || "1970-01-01"),
     );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / STORIES_PER_PAGE));
+  const currentPage = Math.min(page, pageCount);
+
   return (
     <main className="container page catalog-page">
       <div className="page-intro catalog-intro">
@@ -248,7 +253,7 @@ export function CatalogPage({
       </div>
       {filtered.length ? (
         <div className="catalog-grid">
-          {filtered.slice((page - 1) * 12, page * 12).map((s) => (
+          {filtered.slice((currentPage - 1) * STORIES_PER_PAGE, currentPage * STORIES_PER_PAGE).map((s) => (
             <StoryCard story={s} key={s.id} />
           ))}
         </div>
@@ -272,22 +277,22 @@ export function CatalogPage({
           </button>
         </div>
       )}
-      {filtered.length > 12 && (
-        <nav className="pagination" aria-label="Phân trang thư viện">
+      {filtered.length > STORIES_PER_PAGE && (
+        <nav className="pagination" aria-label={ranking ? "Phân trang bảng xếp hạng" : "Phân trang thư viện"}>
           <button
             className="btn secondary"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
+            disabled={currentPage === 1}
+            onClick={() => setPage(currentPage - 1)}
           >
             Trang trước
           </button>
           <span aria-live="polite">
-            Trang {page} / {Math.ceil(filtered.length / 12)}
+            Trang {currentPage} / {pageCount}
           </span>
           <button
             className="btn secondary"
-            disabled={page >= Math.ceil(filtered.length / 12)}
-            onClick={() => setPage(page + 1)}
+            disabled={currentPage >= pageCount}
+            onClick={() => setPage(currentPage + 1)}
           >
             Trang sau
           </button>
